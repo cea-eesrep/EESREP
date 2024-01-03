@@ -1,0 +1,17 @@
+# Temporary and log files
+*.pyc
+*.log
+*.lp
+*.lprof
+profiling
+
+# Folders
+eesrep.egg-info
+garbage
+htmlcov
+dist
+.coverage
+.pytest_cache
+__pycache__
+docs/eesrep-doc
+dist
