@@ -12,7 +12,7 @@ build:
     - cp tutorials/*.ipynb docs/eesrep-sphinx-sources/tutorials/
     - mkdir docs/eesrep-sphinx-sources/md_doc/
     - cp README.md docs/eesrep-sphinx-sources/md_doc/
-    - sed -i -e 's/docs\//..\/..\//g' docs/eesrep-sphinx-sources/md_doc/README.md
+    - sed -i -e 's=docs/=../../=g' docs/eesrep-sphinx-sources/md_doc/README.md
           
   tools:
     python: "3.8"
