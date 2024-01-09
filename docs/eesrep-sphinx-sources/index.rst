@@ -10,7 +10,7 @@ Welcome to eesrep's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   md_doc/introduction.md
+   md_doc/README.md
 
    tutorials/tutorials.rst
 

@@ -15,3 +15,7 @@ dist
 __pycache__
 docs/eesrep-doc
 dist
+
+# Doc replaced files
+docs/eesrep-sphinx-sources/md_doc/README.md
+docs/eesrep-sphinx-sources/tutorials/*.ipynb

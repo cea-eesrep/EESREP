@@ -503,9 +503,9 @@ class Eesrep:
 
     #@profile
     def add_link(self,
-        component_name_1:str,
+        component_1:GenericComponent,
         io_1:str,
-        component_name_2:str,
+        component_2:GenericComponent,
         io_2:str,
         factor:float,
         offset:float):
@@ -518,11 +518,11 @@ class Eesrep:
 
         Parameters
         ----------
-        component_name_1 : str
+        component_1 : GenericComponent
             Model component 1 name.
         io_1 : str
             Input/output linked of the first component.
-        component_name_2 : str
+        component_2 : GenericComponent
             Model component 2 name.
         io_2 : str
             Input/output linked of the second component.
@@ -535,14 +535,16 @@ class Eesrep:
         Raises
         ------
         ComponentNameException
-            Wrong component name.
+            The provided component was not added to the model.
         ComponentNameException
-            Wrong component name.
+            The provided component was not added to the model.
         ComponentIOException
             Wrong input/output name for given component.
         ComponentIOException
             Wrong input/output name for given component.
         """
+        component_name_1 = component_1.name
+        component_name_2 = component_2.name
 
         if not component_name_1 in self.__components:
             raise ComponentNameException(component_name_1)
@@ -565,8 +567,8 @@ class Eesrep:
 
     #@profile
     def plug_to_bus(self,
-            component_name_1:str,
-            io_1:str,
+            component:GenericComponent,
+            io:str,
             bus_name:str,
             is_input:bool,
             factor:float,
@@ -575,10 +577,10 @@ class Eesrep:
 
         Parameters
         ----------
-        component_name_1 : str
-            Model component 1 name.
-        io_1 : str
-            Input/output linked of the first component.
+        component_1 : GenericComponent
+            Model component to plug to the bus.
+        io : str
+            Input/output linked of the component.
         bus_name : str
             Name of the bus to which the Input/output is linked.
         is_input : bool
@@ -593,23 +595,25 @@ class Eesrep:
         BusNameException
             Given bus name does not exist.
         ComponentNameException
-            Given component name does not exist.
+            The provided component was not added to the model.
         ComponentIOException
             Given component does not have the given Input/output.
         """
+        component_name_1 = component.name
+
         if not bus_name in self.__buses:
             raise BusNameException(bus_name)
 
         if not component_name_1 in self.__components:
             raise ComponentNameException(component_name_1)
 
-        if not io_1 in self.__components[component_name_1].io_from_parameters():
-            raise ComponentIOException(component_name_1, io_1)
+        if not io in self.__components[component_name_1].io_from_parameters():
+            raise ComponentIOException(component_name_1, io)
 
         if is_input:
-            self.__buses[bus_name]["inputs"].append([component_name_1, io_1, factor, offset])
+            self.__buses[bus_name]["inputs"].append([component_name_1, io, factor, offset])
         else:
-            self.__buses[bus_name]["outputs"].append([component_name_1, io_1, factor, offset])
+            self.__buses[bus_name]["outputs"].append([component_name_1, io, factor, offset])
 
     #@profile
     def __interpolate(self, dataframe:pd.DataFrame, times:list, column_name:str) -> np.ndarray:

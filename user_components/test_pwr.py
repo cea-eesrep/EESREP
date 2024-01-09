@@ -1,17 +1,23 @@
-from os import path, environ
 import math
-import pandas as pd
+from os import environ, path
+
 import numpy as np
+import pandas as pd
 import pytest
+from pwr import Pwr
 
 from eesrep import Eesrep
 from eesrep.components.sink_source import FatalSink, Sink, Source
-from pwr import Pwr
 
 if "EESREP_SOLVER" not in environ:
     solver_for_tests = "CPLEX"
 else:
     solver_for_tests = environ["EESREP_SOLVER"]
+
+if solver_for_tests == "CBC":
+    interface_for_tests = "mip"
+else:
+    interface_for_tests = "docplex"
 
 
 
@@ -20,7 +26,7 @@ else:
 def test_PWR_001():
     app_home = path.dirname(path.realpath(__file__))
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
     time_df = pd.DataFrame([3600*i for i in range(1000)], columns=["Time"])
     load_df = pd.DataFrame([50 + 40 * math.sin(i/50) for i in range(1000)], columns=["Load"])
@@ -32,12 +38,11 @@ def test_PWR_001():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
-    model.add_component(Source("unsupplied", 0., 10000., 10.))
-    model.add_component(Sink("spilled", 0., 10000., 5000.))
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
-
-    model.add_component(Pwr("pwr",
+    source = Source("source", 0., 10000., 1.)
+    unsupplied = Source("unsupplied", 0., 10000., 10.)
+    spilled = Sink("spilled", 0., 10000., 5000.)
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
+    pwr = Pwr("pwr",
                                         efficiency=1.,
                                         p_min=30.,
                                         p_max=100.,
@@ -47,15 +52,21 @@ def test_PWR_001():
                                         max_time_low=8,
                                         variable_rate=0.1,
                                         power_steps=7
-                                ))
+                                )
 
-    model.add_link("source", "power_out", "pwr", "power_in", 1., 0.)
+    model.add_component(source)
+    model.add_component(unsupplied)
+    model.add_component(spilled)
+    model.add_component(fatal_sink)
+    model.add_component(pwr)
 
-    model.plug_to_bus("pwr", "power_out", "bus_1", True, 1., 0.)
 
-    model.plug_to_bus("unsupplied", "power_out", "bus_1", True, 1., 0.)
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("spilled", "power_in", "bus_1", False, 1., 0.)
+    model.add_link(source, source.power_out, pwr, pwr.power_in, 1., 0.)
+
+    model.plug_to_bus(pwr, pwr.power_out, "bus_1", True, 1., 0.)
+    model.plug_to_bus(unsupplied, unsupplied.power_out, "bus_1", True, 1., 0.)
+    model.plug_to_bus(fatal_sink, fatal_sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(spilled, spilled.power_in, "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 

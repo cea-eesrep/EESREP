@@ -9,7 +9,7 @@ from setuptools import find_packages, setup
 
 setup(
             name='eesrep',
-            version='0.1.2',
+            version='0.1.3',
             description='EESREP is a component based energy system optimisation python module.',
             long_description='EESREP is a component based energy system optimisation python module.',
             author='CEA',
@@ -19,9 +19,10 @@ setup(
             package_data={'eesrep': ['components/*.py', 'solver_interface/*.py']},
             url="https://github.com/tmoulignier/EESREP",
             keywords="optimization, modelling, energy, system",
-            python_requires=">=3.7, <4",
+            python_requires=">=3.6, <4",
             install_requires=["pandas", 
-                                    "numpy"],
+                              "numpy",
+                              "matplotlib"],
             project_urls={  # Optional
                   "Bug Reports": "https://github.com/tmoulignier/EESREP/issues",
                   "Doc": "https://eesrep.readthedocs.io/en/latest//index.html",

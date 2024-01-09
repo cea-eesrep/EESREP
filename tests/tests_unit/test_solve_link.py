@@ -1,17 +1,17 @@
 
 from os import environ
+
+import numpy as np
+import pandas as pd
 import pytest
 
-import pandas as pd
-import numpy as np
-
 import eesrep
+from eesrep.components.converter import Converter
+from eesrep.components.generic_component import GenericComponent
+from eesrep.components.sink_source import FatalSink, Source
+from eesrep.eesrep_enum import TimeSerieType
 from eesrep.eesrep_exceptions import UndefinedTimeRangeException
 from eesrep.solver_interface.generic_interface import GenericInterface
-from eesrep.eesrep_enum import TimeSerieType
-from eesrep.components.generic_component import GenericComponent
-from eesrep.components.converter import Converter
-from eesrep.components.sink_source import FatalSink, Source
 
 if "EESREP_SOLVER" not in environ:
     solver_for_tests = "CBC"
@@ -24,27 +24,27 @@ else:
     interface_for_tests = "cplex"
 
 def make_basic_model(model:eesrep.Eesrep, coeff:float, offset:float):
-    model.add_component(Source("source", 0., 100., 1.))
+    source = Source("source", 0., 100., 1.)
+    model.add_component(source)
+    load = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
+    model.add_component(load)
 
-    fatal_sink = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
-    model.add_component(fatal_sink)
-
-    model.add_link("source", "power_out", "load", "power_in", coeff, offset)
+    model.add_link(source, "power_out", load, "power_in", coeff, offset)
 
 def make_basic_model_with_bus(model:eesrep.Eesrep, revert:bool, coeff:float, offset:float):
-    model.add_component(Source("source", -100., 100., 1.))
-    
+    source = Source("source", -100., 100., 1.)
+    model.add_component(source)
     model.create_bus("bus", {"name":"bus"})
 
-    fatal_sink = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
-    model.add_component(fatal_sink)
+    load = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
+    model.add_component(load)
     
     if revert:
-        model.plug_to_bus("source", "power_out", "bus", True, 1., 0.)
-        model.plug_to_bus("load", "power_in", "bus", True, coeff, offset)
+        model.plug_to_bus(source, "power_out", "bus", True, 1., 0.)
+        model.plug_to_bus(load, "power_in", "bus", True, coeff, offset)
     else:
-        model.plug_to_bus("source", "power_out", "bus", False, 1., 0.)
-        model.plug_to_bus("load", "power_in", "bus", True, coeff, offset)
+        model.plug_to_bus(source, "power_out", "bus", False, 1., 0.)
+        model.plug_to_bus(load, "power_in", "bus", True, coeff, offset)
 
 
 @pytest.mark.Unit

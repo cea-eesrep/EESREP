@@ -62,6 +62,8 @@ class Source(GenericComponent):
                                                     "value": price_variation
                                                 }
 
+        self.power_out = "power_out"
+
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
 
@@ -165,6 +167,8 @@ class Sink(GenericComponent):
                                                     "value": price_variation
                                                 }
 
+        self.power_in = "power_in"
+
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
 
@@ -256,6 +260,8 @@ class FatalSource(GenericComponent):
                                                     "value": source_flow
                                                 }
 
+        self.power_out = "power_out"
+
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
 
@@ -339,6 +345,7 @@ class FatalSink(GenericComponent):
                                                 "value": sink_flow
                                             }
 
+        self.power_in = "power_in"
         
 
     def io_from_parameters(self) -> dict:

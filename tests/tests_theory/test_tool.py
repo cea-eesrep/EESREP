@@ -1,12 +1,12 @@
-from os import path, environ
-import pandas as pd
-import numpy as np
+from os import environ, path
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from eesrep import Eesrep
 from eesrep.components.sink_source import FatalSink, Sink, Source
-from eesrep.components.tool import Delayer, GreaterThan, LowerThan, Integral
+from eesrep.components.tool import Delayer, GreaterThan, Integral, LowerThan
 
 if "EESREP_SOLVER" not in environ:
     solver_for_tests = "CBC"
@@ -24,24 +24,30 @@ else:
 def test_tool_delayer():
     model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(Source("source", 0., 100., 1.))
-    model.add_component(Source("source2", 0., 100., 100.))
+    source = Source("source", 0., 100., 1.)
+    source2 = Source("source2", 0., 100., 100.)
 
-    model.add_component(Sink("sink", 0., 100., 1.))
-    model.add_component(Delayer("delayer", 5, 42.))
+    sink = Sink("sink", 0., 100., 1.)
+    delayer = Delayer("delayer", 5, 42.)
 
-    model.add_component (FatalSink("fatal_sink", pd.DataFrame({"time":list(range(30)), "value":list(range(30))})))
+    fatal_sink = FatalSink("fatal_sink", pd.DataFrame({"time":list(range(30)), "value":list(range(30))}))
+
+    model.add_component(source)
+    model.add_component(source2)
+    model.add_component(sink)
+    model.add_component(delayer)
+    model.add_component(fatal_sink)
 
     model.create_bus("bus", {
                                 "name":"bus"
                             })
 
-    model.add_link("source", "power_out", "delayer", "power_in", 1., 0.)
+    model.add_link(source, "power_out", delayer, "power_in", 1., 0.)
 
-    model.plug_to_bus("delayer", "power_out", "bus", True, 1., 0.)
-    model.plug_to_bus("source2", "power_out", "bus", True, 1., 0.)
-    model.plug_to_bus("sink", "power_in", "bus", False, 1., 0.)
-    model.plug_to_bus("fatal_sink", "power_in", "bus", False, 1., 0.)
+    model.plug_to_bus(delayer, "power_out", "bus", True, 1., 0.)
+    model.plug_to_bus(source2, "power_out", "bus", True, 1., 0.)
+    model.plug_to_bus(sink, "power_in", "bus", False, 1., 0.)
+    model.plug_to_bus(fatal_sink, "power_in", "bus", False, 1., 0.)
 
     model.define_time_range(1., 15, 15, 2)
     model.solve()
@@ -58,14 +64,20 @@ def test_tool_delayer():
 def test_tool_integral():
     model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(Source("source", 0., 100., 1.))
+    source = Source("source", 0., 100., 1.)
+    integral = Integral("integral", 5)
+    fatal_sink = FatalSink("fatal_sink", pd.DataFrame({"time":list(range(30)), "value":list(range(30))}))
 
-    model.add_component(Integral("integral", 5))
+    model.add_component(source)
+    model.add_component(integral)
+    model.add_component(fatal_sink)
 
-    model.add_component (FatalSink("fatal_sink", pd.DataFrame({"time":list(range(30)), "value":list(range(30))})))
-
-    model.add_link("source", "power_out", "fatal_sink", "power_in", 1., 0.)
-    model.add_link("source", "power_out", "integral", "power_in", 1., 0.)
+    model.add_link(source, "power_out", fatal_sink, "power_in", 1., 0.)
+    model.add_link(source, "power_out", fatal_sink, "power_in", 1., 0.)
+    model.add_link(source, "power_out", fatal_sink, "power_in", 1., 0.)
+    model.add_link(source, "power_out", fatal_sink, "power_in", 1., 0.)
+    model.add_link(source, "power_out", fatal_sink, "power_in", 1., 0.)
+    model.add_link(source, "power_out", integral, "power_in", 1., 0.)
 
     model.define_time_range(1., 15, 15, 2)
     model.solve()
@@ -89,19 +101,21 @@ def test_tool_greater_than():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
-
-    model.add_component(Sink("sink", 0., 10000., 0.01))
-
-    model.add_component(GreaterThan("greater_than", 50.))
-
-    model.add_component (FatalSink("fatal_sink_1", pd.DataFrame({"time":list(range(100)), "value":list(range(100))})))
+    source = Source("source", 0., 10000., 1.)
+    sink = Sink("sink", 0., 10000., 0.01)
+    greater_than = GreaterThan("greater_than", 50.)
+    fatal_sink_1 = FatalSink("fatal_sink_1", pd.DataFrame({"time":list(range(100)), "value":list(range(100))}))
     
-    model.plug_to_bus("source", "power_out", "bus_1", True, 1., 0.)
-    model.plug_to_bus("fatal_sink_1", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("sink", "power_in", "bus_1", False, 1., 0.)
+    model.add_component(source)
+    model.add_component(sink)
+    model.add_component(greater_than)
+    model.add_component(fatal_sink_1)
     
-    model.add_link("source", "power_out", "greater_than", "power_in", 1., 0.)
+    model.plug_to_bus(source, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(fatal_sink_1, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
+    
+    model.add_link(source, "power_out", greater_than, "power_in", 1., 0.)
 
     model.define_time_range(1., 1, 100, 1)
 
@@ -125,22 +139,28 @@ def test_tool_lower_than():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
+    source = Source("source", 0., 10000., 1.)
 
-    model.add_component(Source("back_up", 0., 10000., 100.))
+    back_up = Source("back_up", 0., 10000., 100.)
 
-    model.add_component(Sink("sink", 0., 10000., 0.01))
+    sink = Sink("sink", 0., 10000., 0.01)
 
-    model.add_component(LowerThan("lower_than", 50.))
-
-    model.add_component (FatalSink("fatal_sink_1", pd.DataFrame({"time":list(range(100)), "value":list(range(100))})))
+    lower_than = LowerThan("lower_than", 50.)
     
-    model.plug_to_bus("source", "power_out", "bus_1", True, 1., 0.)
-    model.plug_to_bus("back_up", "power_out", "bus_1", True, 1., 0.)
-    model.plug_to_bus("fatal_sink_1", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("sink", "power_in", "bus_1", False, 1., 0.)
+    fatal_sink_1 = FatalSink("fatal_sink_1", pd.DataFrame({"time":list(range(100)), "value":list(range(100))}))
+
+    model.add_component(source)
+    model.add_component(back_up)
+    model.add_component(sink)
+    model.add_component(lower_than)
+    model.add_component(fatal_sink_1)
     
-    model.add_link("source", "power_out", "lower_than", "power_in", 1., 0.)
+    model.plug_to_bus(source, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(back_up, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(fatal_sink_1, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
+    
+    model.add_link(source, "power_out", lower_than, "power_in", 1., 0.)
 
     model.define_time_range(1., 1, 100, 1)
 

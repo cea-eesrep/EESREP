@@ -66,13 +66,13 @@ function generate_sphinx(){
         sed -i 's/Contents\:/Contents\:\n\n   '${module}'\/'${module}'.rst/' ${doc_build_dir}/index.rst
     done
 
-    sed -i 's/Contents\:/Contents\:\n\n   md_doc\/introduction.md/' ${doc_build_dir}/index.rst
+    # sed -i 's/Contents\:/Contents\:\n\n   md_doc\/introduction.md/' ${doc_build_dir}/index.rst
 
 }
 
 function build_html(){
     local options="-j $(nproc) -b ${sphinx_builder}"
-    cp -r ${project_doc_dir}/md_doc ${doc_build_dir}
+    # cp -r ${project_doc_dir}/md_doc ${doc_build_dir}
     sphinx-build ${options} ${doc_build_dir} ${doc_output_dir}
 }
 
@@ -176,7 +176,16 @@ if [[ "${sphinx_init}" == "true" ]]||[[ "${shpinx_do_all}" == "true" ]]; then
     generate_sphinx
 fi
 if [[ "${sphinx_build}" == "true" ]]||[[ "${shpinx_do_all}" == "true" ]]; then
+    rm eesrep-sphinx-sources/tutorials/*.ipynb
+    cp ../tutorials/*.ipynb eesrep-sphinx-sources/tutorials/
+
+    cp ../README.md eesrep-sphinx-sources/md_doc/
+
+    sed -i -e 's/docs\/images\//..\/_static\//g' eesrep-sphinx-sources/md_doc/README.md
+    sed -i -e 's/width=\"300\"/width=\"400\"/g' eesrep-sphinx-sources/md_doc/README.md
+
     build_html
+    cp images/system_example.png eesrep-doc/html/
 fi
 
 echo "

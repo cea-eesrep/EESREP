@@ -1,14 +1,15 @@
 
 from os import environ
-import pytest
 
 import pandas as pd
+import pytest
 
 import eesrep
-from eesrep.eesrep_exceptions import BusNameException, ComponentIOException, ComponentNameException
-from eesrep.solver_interface.generic_interface import GenericInterface
-from eesrep.eesrep_enum import TimeSerieType
 from eesrep.components.generic_component import GenericComponent
+from eesrep.eesrep_enum import TimeSerieType
+from eesrep.eesrep_exceptions import (BusNameException, ComponentIOException,
+                                      ComponentNameException)
+from eesrep.solver_interface.generic_interface import GenericInterface
 
 if "EESREP_SOLVER" not in environ:
     solver_for_tests = "CBC"
@@ -65,10 +66,12 @@ def test_solve_link_wrong_component_1():
         Tests if the cluster starts the right amount of machines
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    model.add_component(FakeComponent("fake"))
+    wrong_component = FakeComponent("wrong_component")
+    fake = FakeComponent("fake")
+    model.add_component(fake)
     
     try:
-        model.add_link("wrong_component", "var", "fake", "intensive_var", 1., 0.)
+        model.add_link(wrong_component, "var", fake, "intensive_var", 1., 0.)
         assert False, "Component does not exist"
     except ComponentNameException:
         assert True
@@ -81,10 +84,12 @@ def test_solve_link_wrong_component_2():
         Tests if the cluster starts the right amount of machines
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    model.add_component(FakeComponent("fake"))
+    wrong_component = FakeComponent("wrong_component")
+    fake = FakeComponent("fake")
+    model.add_component(fake)
     
     try:
-        model.add_link("fake", "intensive_var", "wrong_component", "var", 1., 0.)
+        model.add_link(fake, "intensive_var", wrong_component, "var", 1., 0.)
         assert False, "Component does not exist"
     except ComponentNameException:
         assert True
@@ -97,11 +102,13 @@ def test_solve_link_wrong_component_1_variable():
         Tests if the cluster starts the right amount of machines
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    model.add_component(FakeComponent("fake"))
-    model.add_component(FakeComponent("fake2"))
+    fake = FakeComponent("fake")
+    fake2 = FakeComponent("fake2")
+    model.add_component(fake)
+    model.add_component(fake2)
     
     try:
-        model.add_link("fake", "intensive_var1", "fake2", "intensive_var", 1., 0.)
+        model.add_link(fake, "intensive_var1", fake2, "intensive_var", 1., 0.)
         assert False, "Component variable does not exist"
     except ComponentIOException:
         assert True
@@ -114,11 +121,13 @@ def test_solve_link_wrong_component_2_variable():
         Tests if the cluster starts the right amount of machines
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    model.add_component(FakeComponent("fake"))
-    model.add_component(FakeComponent("fake2"))
+    fake = FakeComponent("fake")
+    model.add_component(fake)
+    fake2 = FakeComponent("fake2")
+    model.add_component(fake2)
     
     try:
-        model.add_link("fake", "intensive_var", "fake2", "intensive_var1", 1., 0.)
+        model.add_link(fake, "intensive_var", fake2, "intensive_var1", 1., 0.)
         assert False, "Component variable does not exist"
     except ComponentIOException:
         assert True
@@ -132,11 +141,11 @@ def test_solve_bus_plug_wrong_component():
         Tests if the cluster starts the right amount of machines
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    model.add_component(FakeComponent("fake"))
+    wrong_component = FakeComponent("fake")
     model.create_bus("bus", {"name":"bus"})
     
     try:
-        model.plug_to_bus("wrong_component", "var", "bus", True, 1., 0.)
+        model.plug_to_bus(wrong_component, "var", "bus", True, 1., 0.)
         assert False, "Component does not exist"
     except ComponentNameException:
         assert True
@@ -150,11 +159,12 @@ def test_solve_bus_plug_wrong_component_variable():
         Tests if the cluster starts the right amount of machines
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    model.add_component(FakeComponent("fake"))
+    fake = FakeComponent("fake")
+    model.add_component(fake)
     model.create_bus("bus", {"name":"bus"})
     
     try:
-        model.plug_to_bus("fake", "wrong_var", "bus", True, 1., 0.)
+        model.plug_to_bus(fake, "wrong_var", "bus", True, 1., 0.)
         assert False, "Component does not exist"
     except ComponentIOException:
         assert True
@@ -168,10 +178,11 @@ def test_solve_bus_plug_wrong_bus():
         Tests if the cluster starts the right amount of machines
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    model.add_component(FakeComponent("fake"))
+    fake = FakeComponent("fake")
+    model.add_component(fake)
     
     try:
-        model.plug_to_bus("fake", "intensive_var", "bus", True, 1., 0.)
+        model.plug_to_bus(fake, "intensive_var", "bus", True, 1., 0.)
         assert False, "Component does not exist"
     except BusNameException:
         assert True

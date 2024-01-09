@@ -50,6 +50,9 @@ class NeuralNetwork(GenericComponent):
 
         self.time_series = {}
 
+        for io in self.io_from_parameters():
+            setattr(self, io, io)
+
     def io_from_parameters(self) -> dict:
         """Lists the component variables.
 

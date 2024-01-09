@@ -14,6 +14,11 @@ if "EESREP_SOLVER" not in environ:
 else:
     solver_for_tests = environ["EESREP_SOLVER"]
 
+if solver_for_tests == "CBC":
+    interface_for_tests = "mip"
+else:
+    interface_for_tests = "cplex"
+
 @pytest.mark.Theory
 @pytest.mark.NeuralNetwork
 @pytest.mark.NN_1_1
@@ -25,17 +30,21 @@ def test_nn_1_1():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_1_1.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 1, 1, 10000000., 
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_1.csv")))
+    neural_network = NeuralNetwork("neural_network", 1, 1, 10000000., 
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_1.csv"))
     
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
+
+    model.add_component(source)
+    model.add_component(neural_network)
+    model.add_component(sink)
     
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 300, 200, 2)
 
@@ -60,20 +69,25 @@ def test_nn_2_1():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_2_1.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"}))
                                     
-    model.add_component(FatalSource("source_2", (data_ts[["Time", "Input_1"]]).rename(columns={"Time":"time", "Input_1":"value"})))
+    source_2 = FatalSource("source_2", (data_ts[["Time", "Input_1"]]).rename(columns={"Time":"time", "Input_1":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 2, 1, 10.,
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_2_1.csv")))
+    neural_network = NeuralNetwork("neural_network", 2, 1, 10.,
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_2_1.csv"))
     
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
     
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("source_2", "power_out", "neural_network", "input_1", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
+    model.add_component(source)
+    model.add_component(source_2)
+    model.add_component(neural_network)
+    model.add_component(sink)   
+
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(source_2, source_2.power_out, neural_network, neural_network.input_1, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -96,20 +110,25 @@ def test_nn_1_2():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_1_2.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 1,2,10.,
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_2.csv")))
+    neural_network = NeuralNetwork("neural_network", 1,2,10.,
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_2.csv"))
     
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
 
-    model.add_component(Sink("sink_2", -10000000., 10000000., 1.))
+    sink_2 = Sink("sink_2", -10000000., 10000000., 1.)
     
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
-    model.add_link("neural_network", "output_1", "sink_2", "power_in", 1., 0.)
+    model.add_component(source)
+    model.add_component(neural_network)
+    model.add_component(sink)    
+    model.add_component(sink_2)
+    
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(neural_network, neural_network.output_1, sink_2, sink_2.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -133,23 +152,28 @@ def test_nn_2_2():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_2_2.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"}))
 
-    model.add_component(FatalSource("source_2", (data_ts[["Time", "Input_1"]]).rename(columns={"Time":"time", "Input_1":"value"})))
+    source_2 = FatalSource("source_2", (data_ts[["Time", "Input_1"]]).rename(columns={"Time":"time", "Input_1":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 2,2,10.,
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_2_2.csv")))
+    neural_network = NeuralNetwork("neural_network", 2,2,10.,
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_2_2.csv"))
 
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
-
-    model.add_component(Sink("sink_2", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
+    sink_2 = Sink("sink_2", -10000000., 10000000., 1.)
     
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("source_2", "power_out", "neural_network", "input_1", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
-    model.add_link("neural_network", "output_1", "sink_2", "power_in", 1., 0.)
+    model.add_component(source)
+    model.add_component(source_2)
+    model.add_component(neural_network)
+    model.add_component(sink)    
+    model.add_component(sink_2)
+    
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(source_2, source_2.power_out, neural_network, neural_network.input_1, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(neural_network, neural_network.output_1, sink_2, sink_2.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -173,17 +197,21 @@ def test_nn_1_15_15_1():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_1_15_15_1.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 1, 1, 1000000.,
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_15_15_1.csv")))
+    neural_network = NeuralNetwork("neural_network", 1, 1, 1000000.,
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_15_15_1.csv"))
 
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
+    
+    model.add_component(source)
+    model.add_component(neural_network)
+    model.add_component(sink)    
 
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 10, 10, 30)
 
@@ -207,17 +235,21 @@ def test_nn_1_5_5_1():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_1_5_5_1.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 1, 1, 10000000., 
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_5_5_1.csv")))
+    neural_network = NeuralNetwork("neural_network", 1, 1, 10000000., 
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_5_5_1.csv"))
 
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
+    
+    model.add_component(source)
+    model.add_component(neural_network)
+    model.add_component(sink)    
 
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -242,17 +274,21 @@ def test_nn_1_5_5_5_5_5_5_1():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_1_5_5_5_5_5_5_1.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 1, 1, 10000000., 
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_5_5_5_5_5_5_1.csv")))
+    neural_network = NeuralNetwork("neural_network", 1, 1, 10000000., 
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_1_5_5_5_5_5_5_1.csv"))
 
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
+    
+    model.add_component(source)
+    model.add_component(neural_network)
+    model.add_component(sink)    
 
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 10, 10, 30)
 
@@ -276,21 +312,27 @@ def test_nn_2_5_5_5_2():
 
     data_ts = pd.read_csv(path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_timeseries_2_5_5_5_2.csv"), sep=";")
 
-    model = Eesrep(solver=solver_for_tests)
+    model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"})))
-    model.add_component(FatalSource("source_2", (data_ts[["Time", "Input_1"]]).rename(columns={"Time":"time", "Input_1":"value"})))
+    source = FatalSource("source", (data_ts[["Time", "Input_0"]]).rename(columns={"Time":"time", "Input_0":"value"}))
+    source_2 = FatalSource("source_2", (data_ts[["Time", "Input_1"]]).rename(columns={"Time":"time", "Input_1":"value"}))
 
-    model.add_component(NeuralNetwork("neural_network", 2, 2, 10000000.,
-                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_2_5_5_5_2.csv")))
+    neural_network = NeuralNetwork("neural_network", 2, 2, 10000000.,
+                                        path.join(app_home, "TestData", "DataSeries", "NeuralNetwork", "RN_coeffs_2_5_5_5_2.csv"))
 
-    model.add_component(Sink("sink", -10000000., 10000000., 1.))
-    model.add_component(Sink("sink_2", -10000000., 10000000., 1.))
+    sink = Sink("sink", -10000000., 10000000., 1.)
+    sink_2 = Sink("sink_2", -10000000., 10000000., 1.)
+    
+    model.add_component(source)
+    model.add_component(source_2)
+    model.add_component(neural_network)
+    model.add_component(sink)    
+    model.add_component(sink_2)
 
-    model.add_link("source", "power_out", "neural_network", "input_0", 1., 0.)
-    model.add_link("source_2", "power_out", "neural_network", "input_1", 1., 0.)
-    model.add_link("neural_network", "output_0", "sink", "power_in", 1., 0.)
-    model.add_link("neural_network", "output_1", "sink_2", "power_in", 1., 0.)
+    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
+    model.add_link(source_2, source_2.power_out, neural_network, neural_network.input_1, 1., 0.)
+    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(neural_network, neural_network.output_1, sink_2, sink_2.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 

@@ -1,4 +1,4 @@
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 __copyright__ = '2023, CEA'
 __author__ = 'CEA'
 

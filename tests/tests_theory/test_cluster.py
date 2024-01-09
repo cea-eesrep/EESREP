@@ -40,17 +40,22 @@ def test_C_001_start_necessary():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
-    model.add_component(Sink("sink", 0., 10000., 10.))
-    model.add_component(Cluster("cluster", 1., 1., 100, 10, 1, 1, 10.))
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = Source("source", 0., 10000., 1.)
+    sink = Sink("sink", 0., 10000., 10.)
+    cluster = Cluster("cluster", 1., 1., 100, 10, 1, 1, 10.)
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_link("source", "power_out", "cluster", "power_in", 1., 0.)
-    model.add_link("cluster", "n_machine", "sink", "power_in", 1., 0.)
+    model.add_component(source)
+    model.add_component(sink)
+    model.add_component(cluster)
+    model.add_component(fatal_sink)
 
-    model.plug_to_bus("cluster", "power_out", "bus_1", True, 1., 0.)
+    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
+    model.add_link(cluster, "n_machine", sink, "power_in", 1., 0.)
 
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
+
+    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 
@@ -88,17 +93,22 @@ def test_C_002_p_min():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
-    model.add_component(Sink("sink", 0., 10000., 10.))
-    model.add_component(Cluster("cluster", 1., 60., 100, 2, 1, 1, 1.))
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = Source("source", 0., 10000., 1.)
+    sink = Sink("sink", 0., 10000., 10.)
+    cluster = Cluster("cluster", 1., 60., 100, 2, 1, 1, 1.)
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
     
-    model.add_link("source", "power_out", "cluster", "power_in", 1., 0.)
+    model.add_component(source)
+    model.add_component(sink)
+    model.add_component(cluster)
+    model.add_component(fatal_sink)
 
-    model.plug_to_bus("cluster", "power_out", "bus_1", True, 1., 0.)
+    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
 
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("sink", "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
+
+    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 
@@ -139,19 +149,25 @@ def test_C_003_stop_necessary():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
-    model.add_component(Sink("sink", 0., 10000., 20.))
-    model.add_component(Sink("sink_n_machine", 0., 10000., 20.))
-    model.add_component(Cluster("cluster", 1., 60., 100, 8, 1, 1, 0.))
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = Source("source", 0., 10000., 1.)
+    sink = Sink("sink", 0., 10000., 20.)
+    sink_n_machine = Sink("sink_n_machine", 0., 10000., 20.)
+    cluster = Cluster("cluster", 1., 60., 100, 8, 1, 1, 0.)
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
+    
+    model.add_component(source)
+    model.add_component(sink)
+    model.add_component(sink_n_machine)
+    model.add_component(cluster)
+    model.add_component(fatal_sink)
 
-    model.add_link("source", "power_out", "cluster", "power_in", 1., 0.)
-    model.add_link("cluster", "n_machine", "sink_n_machine", "power_in", 1., 0.)
+    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
+    model.add_link(cluster, "n_machine", sink_n_machine, "power_in", 1., 0.)
 
-    model.plug_to_bus("cluster", "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
 
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("sink", "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 200, 200, 5)
 
@@ -187,21 +203,26 @@ def test_C_004_min_time():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
-    model.add_component(Source("unsupplied", 0., 10000., 5000.))
-    model.add_component(Sink("sink", 0., 10000., 20.))
-    model.add_component(Sink("sink_n_machine", 0., 10000., 20.))
-    model.add_component(Cluster("cluster", 1., 100., 100, 3, 6, 1, 0.))
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = Source("source", 0., 10000., 20.)
+    unsupplied = Source("unsupplied", 0., 10000., 5000.)
+    sink = Sink("sink", 0., 10000., 500.)
+    sink_n_machine = Sink("sink_n_machine", 0., 10000., 20.)
+    cluster = Cluster("cluster", 1., 100., 100, 3, 6, 1, 0.)
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
+    
+    model.add_component(source)
+    model.add_component(unsupplied)
+    model.add_component(sink)
+    model.add_component(sink_n_machine)
+    model.add_component(cluster)
+    model.add_component(fatal_sink)
+    
+    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
 
-    model.add_link("source", "power_out", "cluster", "power_in", 1., 0.)
-
-    model.plug_to_bus("cluster", "power_out", "bus_1", True, 1., 0.)
-
-    model.plug_to_bus("unsupplied", "power_out", "bus_1", True, 1., 0.)
-
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("sink", "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(unsupplied, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 200, 200, 5)
 
@@ -234,21 +255,30 @@ def test_C_005_min_off_time():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("source", 0., 10000., 1.))
-    model.add_component(Source("unsupplied", 0., 10000., 10.))
-    model.add_component(Sink("spilled", 0., 10000., 5000.))
-    model.add_component(Sink("sink_n_machine", 0., 10000., 20.))
-    model.add_component(Cluster("cluster", 1., 100., 100, 2, 1, 6, 50.))
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    source = Source("source", 0., 10000., 1.)
+    unsupplied = Source("unsupplied", 0., 10000., 10.)
+    spilled= Sink("spilled", 0., 10000., 5000.)
+    sink = Sink("sink", 0., 10000., 500.)
+    sink_n_machine = Sink("sink_n_machine", 0., 10000., 20.)
+    cluster = Cluster("cluster", 1., 100., 100, 2, 1, 6, 50.)
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
+    
+    model.add_component(source)
+    model.add_component(unsupplied)
+    model.add_component(spilled)
+    model.add_component(sink)
+    model.add_component(sink_n_machine)
+    model.add_component(cluster)
+    model.add_component(fatal_sink)
 
-    model.add_link("source", "power_out", "cluster", "power_in", 1., 0.)
+    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
 
-    model.plug_to_bus("cluster", "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
 
-    model.plug_to_bus("unsupplied", "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(unsupplied, "power_out", "bus_1", True, 1., 0.)
 
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("spilled", "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(spilled, "power_in", "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 

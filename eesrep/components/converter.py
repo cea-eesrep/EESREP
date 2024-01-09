@@ -9,8 +9,9 @@ Two types are initially implemented:
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
-from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_enum import TimeSerieType
+from eesrep.solver_interface.generic_interface import GenericInterface
+
 
 class Converter(GenericComponent):
     """EESREP converter model :
@@ -38,6 +39,9 @@ class Converter(GenericComponent):
         self.p_max = p_max
 
         self.time_series = {}
+
+        self.power_in = "power_in"
+        self.power_out = "power_out"
 
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Output based on the component parameters.
@@ -150,6 +154,14 @@ class Cluster(GenericComponent):
         self.turn_on_price = turn_on_price
 
         self.time_series = {}
+
+        self.power_in = "power_in"
+        self.power_out = "power_out"
+        self.n_machine = "n_machine"
+        self.turn_on = "turn_on"
+        self.turn_off = "turn_off"
+        self.turn_on_count = "turn_on_count"
+        self.turn_off_count = "turn_off_count"
 
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs based on the component parameters.

@@ -146,6 +146,12 @@ class Dam(GenericComponent):
                                                 "value": variable_storage_max
                                             }
 
+        self.power_in = "power_in"
+        self.power_out = "power_out"
+        self.storage = "storage"
+        self.power_pump = "power_pump"
+        self.power_free = "power_free"
+
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
 

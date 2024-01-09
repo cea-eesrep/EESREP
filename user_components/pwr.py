@@ -52,6 +52,12 @@ class Pwr(GenericComponent):
         self.power_steps = power_steps
 
         self.time_series = {}
+
+        self.power_in = "power_in"
+        self.power_out = "power_out"
+        self.efpd = "efpd"
+        self.manoeuver = "manoeuver"
+        self.power_step = "power_step"
     
     def io_from_parameters(self) -> dict:
         """Lists the component variables.

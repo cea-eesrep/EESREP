@@ -49,6 +49,9 @@ class GenericStorage(GenericComponent):
 
         self.time_series = {}
 
+        self.flow = "flow"
+        self.storage = "storage"
+
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
 

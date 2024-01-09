@@ -28,9 +28,9 @@ def test_H_001_mass_summary():
 
     model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.add_component(Source("null_source", 0., 0., 1.))
+    null_source = Source("null_source", 0., 0., 1.)
 
-    model.add_component(Dam("dam", 
+    dam = Dam("dam", 
                                 1., 
                                 0.,
                                 1000000,
@@ -42,12 +42,16 @@ def test_H_001_mass_summary():
                                 False,
                                 0.,
                                 0.,
-                                water_inflow=(data_ts[["Time", "Amont"]]).rename(columns={"Time":"time", "Amont":"value"})))
+                                water_inflow=(data_ts[["Time", "Amont"]]).rename(columns={"Time":"time", "Amont":"value"}))
 
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_link("null_source", "power_out", "dam", "power_in", 1., 0.)
-    model.add_link("dam", "power_out", "fatal_sink", "power_in", 1., 0.)
+    model.add_component(null_source)
+    model.add_component(dam)
+    model.add_component(fatal_sink)
+
+    model.add_link(null_source, "power_out", dam, "power_in", 1., 0.)
+    model.add_link(dam, "power_out", fatal_sink, "power_in", 1., 0.)
 
     model.define_time_range(3600., 1001, 1001, 1)
 
@@ -76,12 +80,12 @@ def test_H_004_variable_minimum_storage():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("unsupplied", 0., 10000., 10.))
-    model.add_component(Sink("spilled", 0., 10000., 5000.))
-    model.add_component(Source("null_source", 0., 0., 1.))
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    unsupplied = Source("unsupplied", 0., 10000., 10.)
+    spilled = Sink("spilled", 0., 10000., 5000.)
+    null_source = Source("null_source", 0., 0., 1.)
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_component(Dam("dam", 
+    dam = Dam("dam", 
                                 1., 
                                 0.,
                                 1000000,
@@ -96,16 +100,22 @@ def test_H_004_variable_minimum_storage():
                                 water_inflow = 
                                     (data_ts[["Time", "Amont"]]).rename(columns={"Time":"time", "Amont":"value"}),
                                 variable_storage_min = 
-                                    (data_ts[["Time", "Stockage_Min"]]).rename(columns={"Time":"time", "Stockage_Min":"value"})))
+                                    (data_ts[["Time", "Stockage_Min"]]).rename(columns={"Time":"time", "Stockage_Min":"value"}))
 
-    model.add_link("null_source", "power_out", "dam", "power_in", 1., 0.)
+    model.add_component(unsupplied)
+    model.add_component(spilled)
+    model.add_component(null_source)
+    model.add_component(dam)
+    model.add_component(fatal_sink)
 
-    model.plug_to_bus("dam", "power_out", "bus_1", True, 1., 0.)
+    model.add_link(null_source, "power_out", dam, "power_in", 1., 0.)
 
-    model.plug_to_bus("unsupplied", "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(dam, "power_out", "bus_1", True, 1., 0.)
 
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("spilled", "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(unsupplied, "power_out", "bus_1", True, 1., 0.)
+
+    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(spilled, "power_in", "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 1000, 1000, 1)
 
@@ -133,11 +143,11 @@ def test_H_005_variable_maximum_storage():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("unsupplied", 0., 10000., 10.))
-    model.add_component(Sink("spilled", 0., 10000., 5000.))
-    model.add_component(Source("null_source", 0., 0., 1.))
+    unsupplied = Source("unsupplied", 0., 10000., 10.)
+    spilled = Sink("spilled", 0., 10000., 5000.)
+    null_source = Source("null_source", 0., 0., 1.)
 
-    model.add_component(Dam("dam", 
+    dam = Dam("dam", 
                                 1., 
                                 0.,
                                 1000000,
@@ -152,18 +162,24 @@ def test_H_005_variable_maximum_storage():
                                 water_inflow = 
                                     (data_ts[["Time", "Amont"]]).rename(columns={"Time":"time", "Amont":"value"}),
                                 variable_storage_max = 
-                                    (data_ts[["Time", "Stockage_Max"]]).rename(columns={"Time":"time", "Stockage_Max":"value"})))
+                                    (data_ts[["Time", "Stockage_Max"]]).rename(columns={"Time":"time", "Stockage_Max":"value"}))
 
-    model.add_component(FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.add_link("null_source", "power_out", "dam", "power_in", 1., 0.)
+    model.add_component(unsupplied)
+    model.add_component(spilled)
+    model.add_component(null_source)
+    model.add_component(dam)
+    model.add_component(fatal_sink)
+    
+    model.add_link(null_source, "power_out", dam, "power_in", 1., 0.)
 
-    model.plug_to_bus("dam", "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(dam, "power_out", "bus_1", True, 1., 0.)
 
-    model.plug_to_bus("unsupplied", "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(unsupplied, "power_out", "bus_1", True, 1., 0.)
 
-    model.plug_to_bus("fatal_sink", "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus("spilled", "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(spilled, "power_in", "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 1000, 1000, 1)
 

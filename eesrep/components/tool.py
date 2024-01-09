@@ -32,6 +32,9 @@ class Delayer(GenericComponent):
 
         self.time_series = {}
 
+        self.power_in = "power_in"
+        self.power_out = "power_out"
+
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
 
@@ -116,6 +119,9 @@ class Integral(GenericComponent):
         self.integration_time = integration_time
 
         self.time_series = {}
+
+        self.power_in = "power_in"
+        self.power_out = "power_out"
 
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
@@ -215,6 +221,8 @@ class LowerThan(GenericComponent):
                                                     "value": value_serie
                                                 }
 
+        self.power_in = "power_in"
+
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.
 
@@ -301,6 +309,8 @@ class GreaterThan(GenericComponent):
                                                     "type": TimeSerieType.INTENSIVE,
                                                     "value": value_serie
                                                 }
+
+        self.power_in = "power_in"
 
     def io_from_parameters(self) -> dict:
         """Lists the component Input/Outputs.

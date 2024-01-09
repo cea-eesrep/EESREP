@@ -1,11 +1,10 @@
-from os import path, environ
-import pandas as pd
+from os import environ, path
+
 import numpy as np
-
-from eesrep import Eesrep
-
+import pandas as pd
 import pytest
 
+from eesrep import Eesrep
 from eesrep.components.sink_source import FatalSink, Source
 
 if "EESREP_SOLVER" not in environ:
@@ -31,14 +30,18 @@ def test_G_001_production_price():
                                 "name":"bus_1"
                             })
 
-    model.add_component(Source("oil", 0., 100., 5.))
-    model.add_component(Source("gas", 0., 100., 1.))
+    oil = Source("oil", 0., 100., 5.)
+    gas = Source("gas", 0., 100., 1.)
 
-    model.add_component(FatalSink("load", (reference_data[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"})))
+    load = FatalSink("load", (reference_data[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
-    model.plug_to_bus("oil", "power_out", "bus_1", False, 1., 0.)
-    model.plug_to_bus("gas", "power_out", "bus_1", False, 1., 0.)
-    model.plug_to_bus("load", "power_in", "bus_1", True, 1., 0.)
+    model.add_component(oil)
+    model.add_component(gas)
+    model.add_component(load)
+
+    model.plug_to_bus(oil, "power_out", "bus_1", False, 1., 0.)
+    model.plug_to_bus(gas, "power_out", "bus_1", False, 1., 0.)
+    model.plug_to_bus(load, "power_in", "bus_1", True, 1., 0.)
 
     model.define_time_range(3600., 1, 1000, 1)
     model.solve()
