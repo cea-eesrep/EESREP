@@ -9,7 +9,6 @@ version: 2
 build:
   os: ubuntu-22.04
   commands:
-    - rm docs/eesrep-sphinx-sources/tutorials/*.ipynb
     - cp tutorials/*.ipynb docs/eesrep-sphinx-sources/tutorials/
     - cp README.md docs/eesrep-sphinx-sources/md_doc/
     - sed -i -e 's/docs\//..\/..\//g' docs/eesrep-sphinx-sources/md_doc/README.md
