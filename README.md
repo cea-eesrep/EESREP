@@ -7,9 +7,11 @@ EESREP allows setting-up an energy system using its API, parametrising its compo
 
 The following images an energy system example that can be done using EESREP.
 
-<p align="center">
+<!-- <p align="center">
 <img src="docs/images/system_example.png" alt="Energy system example" width="300"/>
-</p>
+</p> -->
+
+![Energy system example](docs/images/system_example.png)
 
 EESREP is a research tool developed at CEA (DES/ISAS/DM2S/SERMA).
 

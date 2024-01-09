@@ -172,7 +172,7 @@ fi
 if [[ "${sphinx_init}" == "true" ]]||[[ "${shpinx_do_all}" == "true" ]]; then
     add_sources Sources eesrep ${project_root_dir}
     add_sources Sources tutorials ${project_root_dir}
-    # add_sources MedCoupling medcoupling.py /home/prerequis_codes-public/install/lin-x86-64-cen7/native/SALOME-9.8.0/MEDCOUPLING/lib/python3.6/site-packages
+    
     generate_sphinx
 fi
 if [[ "${sphinx_build}" == "true" ]]||[[ "${shpinx_do_all}" == "true" ]]; then
@@ -181,11 +181,9 @@ if [[ "${sphinx_build}" == "true" ]]||[[ "${shpinx_do_all}" == "true" ]]; then
 
     cp ../README.md eesrep-sphinx-sources/md_doc/
 
-    sed -i -e 's/docs\/images\//..\/_static\//g' eesrep-sphinx-sources/md_doc/README.md
-    sed -i -e 's/width=\"300\"/width=\"400\"/g' eesrep-sphinx-sources/md_doc/README.md
+    sed -i -e 's/docs\//..\/..\//g' eesrep-sphinx-sources/md_doc/README.md
 
     build_html
-    cp images/system_example.png eesrep-doc/html/
 fi
 
 echo "

@@ -8,6 +8,14 @@ version: 2
 # Set the version of Python and other tools you might need
 build:
   os: ubuntu-22.04
+  steps:
+    - run:
+        command:
+          - rm docs/eesrep-sphinx-sources/tutorials/*.ipynb
+          - cp tutorials/*.ipynb docs/eesrep-sphinx-sources/tutorials/
+          - cp README.md docs/eesrep-sphinx-sources/md_doc/
+          - sed -i -e 's/docs\//..\/..\//g' docs/eesrep-sphinx-sources/md_doc/README.md
+          
   tools:
     python: "3.8"
     # You can also specify other tool versions:
