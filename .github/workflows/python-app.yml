@@ -54,7 +54,7 @@ jobs:
         coverage report
         pytest --nbmake tutorials
     - name: Test with pytest linux
-      if: ! ${{runner.os == 'windows-latest'}}
+      if: "! ${{runner.os == 'windows-latest'}}"
       run: |
         export EESREP_SOLVER="CBC"
         coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
