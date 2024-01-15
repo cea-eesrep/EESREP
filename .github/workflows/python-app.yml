@@ -31,7 +31,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest mip pandas numpy matplotlib eesrep
-        python -m pip install coverage pytest-cov nbmake docplex cplex
+        python -m pip install coverage pytest-cov nbmake docplex cplex pyomo
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -40,5 +40,10 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest tests --cov=eesrep --cov-report html --tb=short -W ignore::DeprecationWarning
+        export SOLVER_INTERFACE="CBC"
+        pytest tests --cov=eesrep --tb=short -W ignore::DeprecationWarning
+        export SOLVER_INTERFACE="DOCPLEX"
+        pytest tests --cov=eesrep --tb=short -W ignore::DeprecationWarning
+        export SOLVER_INTERFACE="PYOMO"
+        pytest tests --cov=eesrep --tb=short -W ignore::DeprecationWarning
         pytest --nbmake tutorials
