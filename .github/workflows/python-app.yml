@@ -30,7 +30,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest mip pandas numpy matplotlib eesrep
+        python -m pip install flake8 pytest mip pandas numpy matplotlib 
+        python -m pip install .[test]
         python -m pip install coverage pytest-cov nbmake docplex cplex pyomo
     - name: Lint with flake8
       run: |
