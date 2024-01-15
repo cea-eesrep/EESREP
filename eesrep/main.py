@@ -900,7 +900,7 @@ class Eesrep:
                                                             self.__model)
 
             self.__variables[component.name] = variables
-            self.__objective += objective
+            self.__objective = self.__model.sum_variables([self.__objective, objective])
 
         for link in self.__links:
             self._create_link(link)
