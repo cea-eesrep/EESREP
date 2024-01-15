@@ -39,9 +39,10 @@ jobs:
     - name: Test with pytest
       run: |
         export SOLVER_INTERFACE="CBC"
-        coverage run --source=eesrep,tests -m pytest tests --tb=short -W ignore::DeprecationWarning
+        coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
         export SOLVER_INTERFACE="DOCPLEX"
-        coverage run --source=eesrep,tests -m pytest tests --tb=short -W ignore::DeprecationWarning
+        coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
         export SOLVER_INTERFACE="PYOMO"
-        coverage run --source=eesrep,tests -m pytest tests --tb=short -W ignore::DeprecationWarning
+        coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
+        coverage report
         pytest --nbmake tutorials
