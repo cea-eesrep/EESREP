@@ -1,5 +1,17 @@
+[![dependency - eesrep](https://img.shields.io/badge/dependency-eesrep-blue)](https://pypi.org/project/eesrep)
+[![GitHub tag](https://img.shields.io/github/tag/tmoulignier/eesrep?include_prereleases=&sort=semver&color=blue)](https://github.com/tmoulignier/eesrep/releases/) [![Documentation](https://img.shields.io/readthedocs/eesrep
+)](https://eesrep.readthedocs.io/en/latest/)
+
+[![OS - Linux](https://img.shields.io/badge/OS-Linux-blue?logo=linux&logoColor=white)](https://www.linux.org/ "Go to Linux homepage")
+[![OS - Windows](https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white)](https://www.microsoft.com/ "Go to Microsoft homepage")
+[![Made with Python](https://img.shields.io/badge/Python->=3.6-blue?logo=python&logoColor=white)](https://python.org "Go to Python homepage")
+[![License](https://img.shields.io/badge/License-MIT-blue)](#license)
+[![python-app.yml](https://github.com/tmoulignier/EESREP/actions/workflows/python-app.yml/badge.svg)](https://github.com/tmoulignier/EESREP/actions/workflows/python-app.yml)
+
+
 
 # EESREP
+
 
 EESREP is a component based energy system optimisation python module.
 
