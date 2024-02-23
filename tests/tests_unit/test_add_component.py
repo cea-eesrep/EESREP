@@ -1,5 +1,6 @@
 
 from os import environ
+from eesrep.eesrep_io import ComponentIO
 import pytest
 
 import pandas as pd
@@ -7,7 +8,6 @@ import pandas as pd
 import eesrep
 from eesrep.components.generic_component import GenericComponent
 from eesrep.eesrep_enum import TimeSerieType
-from eesrep.eesrep_exceptions import ComponentTypeException, ParametersException
 from eesrep.solver_interface.generic_interface import GenericInterface
 
 if "EESREP_SOLVER" not in environ:
@@ -18,7 +18,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 @pytest.mark.Unit
 @pytest.mark.component
@@ -85,10 +85,7 @@ def test_component_name_already_exists():
 
         def io_from_parameters(self) -> dict:
             return { 
-                        "intensive_var":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity": False
-                                        }
+                        "intensive_var": ComponentIO(self.name, "intensive_var", TimeSerieType.INTENSIVE, False)
                     }
 
         def build_model(self,
@@ -385,157 +382,5 @@ def test_wrong_io_type():
     try:
         model.add_component(FakeComponent("fake"))
         assert False, "io definition should be a dict"
-    except TypeError:
-        assert True
-
-@pytest.mark.Unit
-@pytest.mark.component
-def test_wrong_io_type_element():
-    """
-        Tests if the cluster starts the right amount of machines
-    """
-    class FakeComponent(GenericComponent):
-        def __init__(self, name:str):
-            self.name = name
-            self.time_series = {}
-
-        def io_from_parameters(self) -> dict:
-            return { 
-                        "intensive_var":0.
-                    }
-
-        def build_model(self,
-            component_name:str,
-            time_steps:list,
-            time_series:pd.DataFrame,
-            history:pd.DataFrame,
-            model_interface:GenericInterface):
-            
-            variables = {}
-            objective = 0.
-
-            return variables, objective
-
-    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    
-    try:
-        model.add_component(FakeComponent("fake"))
-        assert False, "io should be dicts"
-    except TypeError:
-        assert True
-
-@pytest.mark.Unit
-@pytest.mark.component
-def test_wrong_io_element_keys():
-    """
-        Tests if the cluster starts the right amount of machines
-    """
-    class FakeComponent(GenericComponent):
-        def __init__(self, name:str):
-            self.name = name
-            self.time_series = {}
-
-        def io_from_parameters(self) -> dict:
-            return { 
-                        "intensive_var":{
-                                            "type": TimeSerieType.INTENSIVE
-                                        }
-                    }
-
-        def build_model(self,
-            component_name:str,
-            time_steps:list,
-            time_series:pd.DataFrame,
-            history:pd.DataFrame,
-            model_interface:GenericInterface):
-            
-            variables = {}
-            objective = 0.
-
-            return variables, objective
-
-    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    
-    try:
-        model.add_component(FakeComponent("fake"))
-        assert False, "io definition have wrong keys"
-    except KeyError:
-        assert True
-
-@pytest.mark.Unit
-@pytest.mark.component
-def test_wrong_io_type_type():
-    """
-        Tests if the cluster starts the right amount of machines
-    """
-    class FakeComponent(GenericComponent):
-        def __init__(self, name:str):
-            self.name = name
-            self.time_series = {}
-
-        def io_from_parameters(self) -> dict:
-            return { 
-                        "intensive_var":{
-                                            "type": False,
-                                            "continuity": False
-                                        }
-                    }
-
-        def build_model(self,
-            component_name:str,
-            time_steps:list,
-            time_series:pd.DataFrame,
-            history:pd.DataFrame,
-            model_interface:GenericInterface):
-            
-            variables = {}
-            objective = 0.
-
-            return variables, objective
-
-    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    
-    try:
-        model.add_component(FakeComponent("fake"))
-        assert False, "io type must be a TimeSerieType"
-    except TypeError:
-        assert True
-
-@pytest.mark.Unit
-@pytest.mark.component
-def test_wrong_io_type_continuity():
-    """
-        Tests if the cluster starts the right amount of machines
-    """
-    class FakeComponent(GenericComponent):
-        def __init__(self, name:str):
-            self.name = name
-            self.time_series = {}
-
-        def io_from_parameters(self) -> dict:
-            return { 
-                        "intensive_var":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity": "false"
-                                        }
-                    }
-
-        def build_model(self,
-            component_name:str,
-            time_steps:list,
-            time_series:pd.DataFrame,
-            history:pd.DataFrame,
-            model_interface:GenericInterface):
-            
-            variables = {}
-            objective = 0.
-
-            return variables, objective
-
-    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    
-    try:
-        model.add_component(FakeComponent("fake"))
-        assert False, "io continuity must be a float"
     except TypeError:
         assert True

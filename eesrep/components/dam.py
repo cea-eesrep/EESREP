@@ -1,7 +1,9 @@
 """This file contains the EESREP generic dam model."""
+from typing import Dict
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
+from eesrep.eesrep_io import ComponentIO
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_enum import TimeSerieType
 
@@ -146,49 +148,32 @@ class Dam(GenericComponent):
                                                 "value": variable_storage_max
                                             }
 
-        self.power_in = "power_in"
-        self.power_out = "power_out"
-        self.storage = "storage"
-        self.power_pump = "power_pump"
-        self.power_free = "power_free"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, False)
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
+        self.storage = ComponentIO(self.name, "storage", TimeSerieType.EXTENSIVE, True)
+        self.power_pump = ComponentIO(self.name, "power_pump", TimeSerieType.INTENSIVE, False)
+        self.power_free = ComponentIO(self.name, "power_free", TimeSerieType.INTENSIVE, False)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         io_dict = {
-                            "power_in":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":False
-                                        },
-                            "power_out":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":False
-                                        },
-                            "storage":{
-                                            "type": TimeSerieType.EXTENSIVE,
-                                            "continuity":True
-                                        }
-                        }
+                        "power_in": self.power_in,
+                        "power_out": self.power_out,
+                        "storage": self.storage
+                    }
 
         if self.pump_max > 0:
-            io_dict["power_pump"] = {
-                                                "type": TimeSerieType.INTENSIVE,
-                                                "continuity":False
-                                            }
+            io_dict["power_pump"] = self.power_pump
 
         if self.free_output:
-            io_dict["power_free"] = {
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":False
-                                        }
+            io_dict["power_free"] = self.power_free
 
         return io_dict
 

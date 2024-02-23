@@ -1,6 +1,6 @@
 """EESREP model builder and solver module"""
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ from .components.generic_component import GenericComponent
 from .eesrep_exceptions import *
 from .solver_interface.generic_interface import GenericInterface
 from .solver_interface.interface_tester import InterfaceTester
+from .eesrep_io import ComponentIO
 
 try:
     from .solver_interface.docplex_interface import DocplexInterface
@@ -17,14 +18,6 @@ except ImportError:
         """ Fake DocplexInterface class for import error management. """
         def __init__(self, direction:str = "Minimize", solver:str = "CPLEX"):
             raise ImportError("Error while importing Docplex Interface. Make sure you have the docplex module installed.")
-
-try:
-    from .solver_interface.cplex_interface import CplexInterface
-except ImportError:
-    class CplexInterface:
-        """ Fake DocplexInterface class for import error management. """
-        def __init__(self, direction:str = "Minimize", solver:str = "CPLEX"):
-            raise ImportError("Error while importing Cplex Interface. Make sure you have the cplex module installed.")
 
 try:
     from .solver_interface.mip_interface import MIPInterface
@@ -84,6 +77,7 @@ class Eesrep:
         self.__steps_solved: int = 0
 
         self.__objective: int = 0.
+        self.__objective_io_list: List[Tuple[ComponentIO, float]] = []
 
         self.__time_range_defined: bool = False
 
@@ -107,7 +101,7 @@ class Eesrep:
             ------
                 ValueError: The solver argument provided while creating an Eesrep object is not correct.
         """
-        if self.__interface.lower() not in ["mip", "docplex", "cplex", "pyomo"] + list(self.__custom_interfaces.keys()):
+        if self.__interface.lower() not in ["mip", "docplex", "pyomo"] + list(self.__custom_interfaces.keys()):
             raise ValueError(
                 f"Interface name {self.__interface} is not implemented, please use: mip, pyomo, docplex or register your interface first.")
 
@@ -120,10 +114,6 @@ class Eesrep:
         elif self.__interface.lower() == "docplex":
             self.__solver = "CPLEX"
             self.__model = DocplexInterface(direction = self.__direction)
-
-        elif self.__interface.lower() == "cplex":
-            self.__solver = "CPLEX"
-            self.__model = CplexInterface(direction = self.__direction)
 
         elif self.__interface.lower() == "pyomo":
             self.__model = PyomoInterface(direction = self.__direction, solver=self.__solver)
@@ -145,7 +135,7 @@ class Eesrep:
         ValueError
             Custom solver interface already exists with this key.
         """
-        if interface_name in self.__custom_interfaces or interface_name.lower() in ["cbc", "gurobi", "cplex", "pyomo"]:
+        if interface_name in self.__custom_interfaces or interface_name.lower() in ["cbc", "gurobi", "docplex", "pyomo"]:
             raise ValueError(f"A custom interface already exists at the key '{interface_name}'")
 
         tester = InterfaceTester()
@@ -238,18 +228,14 @@ class Eesrep:
             raise TypeError(f"The input/output definition is not a dictionnary.")
 
         for elem in io.values():
-            if not isinstance(elem, dict):
-                raise TypeError(f"'{elem}' io definition is not a dictionnary.")
+            if not isinstance(elem, ComponentIO):
+                raise TypeError(f"'{elem}' io definition is not a ComponentIO object.")
 
-            if not sorted(list(elem.keys())) == ["continuity", "type"]:
-                raise KeyError(f"'{elem}' io definition dictionnary does not have the right keys, should be ['type', 'continuity'].")
-            
-            if not isinstance(elem["type"], TimeSerieType):
-                raise TypeError(f"'{elem}' io 'type' is not a member of TimeSerieType enum.")
-            
-            if not isinstance(elem["continuity"], bool):
-                raise TypeError(f"'{elem}' io 'continuity' is not a boolean.")
+        if "\ " in name:
+            print("/!\\ Space caracter present in the component name, please replace to underscore /!\\")
 
+        if "-" in name:
+            print("/!\\ Dash caracter present in the component name, please replace to underscore /!\\")
 
         self.__components[name] = component
         
@@ -311,7 +297,7 @@ class Eesrep:
         return self.__components
 
     #@profile
-    def get_component_io(self, component_name:str) -> Dict[str, Any]:
+    def get_component_io(self, component_name:str) -> Dict[str, ComponentIO]:
         """Returns an existing model component Inputs/Outputs from its name.
 
         Parameters
@@ -321,8 +307,8 @@ class Eesrep:
 
         Returns
         -------
-        Dict[str, Any]
-            Dict that lists the component Inputs/Outputs and their parameters
+        Dict[str, ComponentIO]
+            Dict that lists the component Inputs/Outputs
 
         Raises
         ------
@@ -503,10 +489,8 @@ class Eesrep:
 
     #@profile
     def add_link(self,
-        component_1:GenericComponent,
-        io_1:str,
-        component_2:GenericComponent,
-        io_2:str,
+        io_1:ComponentIO,
+        io_2:ComponentIO,
         factor:float,
         offset:float):
         """
@@ -518,13 +502,9 @@ class Eesrep:
 
         Parameters
         ----------
-        component_1 : GenericComponent
-            Model component 1 name.
-        io_1 : str
+        io_1 : ComponentIO
             Input/output linked of the first component.
-        component_2 : GenericComponent
-            Model component 2 name.
-        io_2 : str
+        io_2 : ComponentIO
             Input/output linked of the second component.
         factor : float
             Input/output 2 multiply factor.
@@ -543,8 +523,8 @@ class Eesrep:
         ComponentIOException
             Wrong input/output name for given component.
         """
-        component_name_1 = component_1.name
-        component_name_2 = component_2.name
+        component_name_1 = io_1.component_name
+        component_name_2 = io_2.component_name
 
         if not component_name_1 in self.__components:
             raise ComponentNameException(component_name_1)
@@ -552,23 +532,22 @@ class Eesrep:
         if not component_name_2 in self.__components:
             raise ComponentNameException(component_name_2)
 
-        if not io_1 in self.get_component_io(component_name_1):
-            raise ComponentIOException(component_name_1, io_1)
+        if not io_1.io_name in self.get_component_io(component_name_1):
+            raise ComponentIOException(component_name_1, io_1.io_name)
 
-        if not io_2 in self.get_component_io(component_name_2):
-            raise ComponentIOException(component_name_2, io_2)
+        if not io_2.io_name in self.get_component_io(component_name_2):
+            raise ComponentIOException(component_name_2, io_2.io_name)
 
         self.__links.append({"component_name_1":component_name_1, 
-                                "io_1":io_1, 
+                                "io_1":io_1.io_name, 
                                 "component_name_2":component_name_2, 
-                                "io_2":io_2, 
+                                "io_2":io_2.io_name, 
                                 "factor":factor, 
                                 "offset":offset})
 
     #@profile
     def plug_to_bus(self,
-            component:GenericComponent,
-            io:str,
+            io:ComponentIO,
             bus_name:str,
             is_input:bool,
             factor:float,
@@ -577,10 +556,8 @@ class Eesrep:
 
         Parameters
         ----------
-        component_1 : GenericComponent
-            Model component to plug to the bus.
         io : str
-            Input/output linked of the component.
+            Input/output of the component.
         bus_name : str
             Name of the bus to which the Input/output is linked.
         is_input : bool
@@ -599,7 +576,7 @@ class Eesrep:
         ComponentIOException
             Given component does not have the given Input/output.
         """
-        component_name_1 = component.name
+        component_name_1 = io.component_name
 
         if not bus_name in self.__buses:
             raise BusNameException(bus_name)
@@ -607,13 +584,13 @@ class Eesrep:
         if not component_name_1 in self.__components:
             raise ComponentNameException(component_name_1)
 
-        if not io in self.__components[component_name_1].io_from_parameters():
-            raise ComponentIOException(component_name_1, io)
+        if not io.io_name in self.__components[component_name_1].io_from_parameters():
+            raise ComponentIOException(component_name_1, io.io_name)
 
         if is_input:
-            self.__buses[bus_name]["inputs"].append([component_name_1, io, factor, offset])
+            self.__buses[bus_name]["inputs"].append([component_name_1, io.io_name, factor, offset])
         else:
-            self.__buses[bus_name]["outputs"].append([component_name_1, io, factor, offset])
+            self.__buses[bus_name]["outputs"].append([component_name_1, io.io_name, factor, offset])
 
     #@profile
     def __interpolate(self, dataframe:pd.DataFrame, times:list, column_name:str) -> np.ndarray:
@@ -734,7 +711,7 @@ class Eesrep:
             return self.__components[component_name].get_time_series()[time_serie]["type"] == TimeSerieType.INTENSIVE
 
         if time_serie in self.get_component_io(component_name):
-            return self.get_component_io(component_name)[time_serie]["type"] == TimeSerieType.INTENSIVE
+            return self.get_component_io(component_name)[time_serie].type == TimeSerieType.INTENSIVE
 
         raise TimeSerieException(self.__components[component_name].__class__.__name__, time_serie)
 
@@ -768,7 +745,7 @@ class Eesrep:
             return self.__components[component_name].get_time_series()[time_serie]["type"] == TimeSerieType.EXTENSIVE
 
         if time_serie in self.get_component_io(component_name):
-            return self.get_component_io(component_name)[time_serie]["type"] == TimeSerieType.EXTENSIVE
+            return self.get_component_io(component_name)[time_serie].type == TimeSerieType.EXTENSIVE
 
         raise TimeSerieException(self.__components[component_name].__class__.__name__, time_serie)
 
@@ -887,7 +864,7 @@ class Eesrep:
 
             if self.__steps_solved > 0:
                 for time_serie in self.get_component_io(component.name):
-                    if self.get_component_io(component.name)[time_serie]["continuity"]:
+                    if self.get_component_io(component.name)[time_serie].continuity:
                         if len(list(history.columns)) == 0:
                             history["time"] = old_results["time"]
 
@@ -901,6 +878,10 @@ class Eesrep:
 
             self.__variables[component.name] = variables
             self.__objective = self.__model.sum_variables([self.__objective, objective])
+
+        #   TODO
+        for io_ in self.__objective_io_list:
+            pass
 
         for link in self.__links:
             self._create_link(link)

@@ -3,6 +3,7 @@ from os import environ
 
 import numpy as np
 import pandas as pd
+from eesrep.eesrep_io import ComponentIO
 import pytest
 
 import eesrep
@@ -21,7 +22,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 def make_basic_model(model:eesrep.Eesrep, coeff:float, offset:float):
     source = Source("source", 0., 100., 1.)
@@ -29,7 +30,7 @@ def make_basic_model(model:eesrep.Eesrep, coeff:float, offset:float):
     load = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
     model.add_component(load)
 
-    model.add_link(source, "power_out", load, "power_in", coeff, offset)
+    model.add_link(source.power_out, load.power_in, coeff, offset)
 
 def make_basic_model_with_bus(model:eesrep.Eesrep, revert:bool, coeff:float, offset:float):
     source = Source("source", -100., 100., 1.)
@@ -40,11 +41,11 @@ def make_basic_model_with_bus(model:eesrep.Eesrep, revert:bool, coeff:float, off
     model.add_component(load)
     
     if revert:
-        model.plug_to_bus(source, "power_out", "bus", True, 1., 0.)
-        model.plug_to_bus(load, "power_in", "bus", True, coeff, offset)
+        model.plug_to_bus(source.power_out, "bus", True, 1., 0.)
+        model.plug_to_bus(load.power_in, "bus", True, coeff, offset)
     else:
-        model.plug_to_bus(source, "power_out", "bus", False, 1., 0.)
-        model.plug_to_bus(load, "power_in", "bus", True, coeff, offset)
+        model.plug_to_bus(source.power_out, "bus", False, 1., 0.)
+        model.plug_to_bus(load.power_in, "bus", True, coeff, offset)
 
 
 @pytest.mark.Unit
@@ -215,10 +216,7 @@ def test_solve_greater_than():
 
         def io_from_parameters(self) -> dict:
             return { 
-                        "intensive_var":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity": False
-                                        }
+                        "intensive_var": ComponentIO(self.name, "intensive_var", TimeSerieType.INTENSIVE, False)
                     }
 
         def build_model(self,
@@ -262,10 +260,7 @@ def test_solve_lower_than():
 
         def io_from_parameters(self) -> dict:
             return { 
-                        "intensive_var":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity": False
-                                        }
+                        "intensive_var": ComponentIO(self.name, "intensive_var", TimeSerieType.INTENSIVE, False)
                     }
 
         def build_model(self,
@@ -311,10 +306,7 @@ def test_history():
 
         def io_from_parameters(self) -> dict:
             return { 
-                        "intensive_var":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity": True
-                                        }
+                        "intensive_var": ComponentIO(self.name, "intensive_var", TimeSerieType.INTENSIVE, True)
                     }
 
         def build_model(self,
@@ -362,10 +354,7 @@ def test_solve_maximize():
 
         def io_from_parameters(self) -> dict:
             return { 
-                        "intensive_var":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity": False
-                                        }
+                        "intensive_var": ComponentIO(self.name, "intensive_var", TimeSerieType.INTENSIVE, False)
                     }
 
         def build_model(self,

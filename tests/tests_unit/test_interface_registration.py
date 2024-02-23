@@ -15,7 +15,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 @pytest.mark.Unit
 @pytest.mark.interface_registration
@@ -26,7 +26,7 @@ def test_existing_interface():
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
     try:
-        model.register_solver_interface("cplex", DocplexInterface)
+        model.register_solver_interface("docplex", DocplexInterface)
         assert False, "Accepted to add an existing interface"
     except ValueError:
         assert True

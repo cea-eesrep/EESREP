@@ -17,7 +17,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 @pytest.mark.Theory
 @pytest.mark.NeuralNetwork
@@ -43,8 +43,8 @@ def test_nn_1_1():
     model.add_component(neural_network)
     model.add_component(sink)
     
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 300, 200, 2)
 
@@ -85,9 +85,9 @@ def test_nn_2_1():
     model.add_component(neural_network)
     model.add_component(sink)   
 
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(source_2, source_2.power_out, neural_network, neural_network.input_1, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(source_2.power_out, neural_network.input_1, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -126,9 +126,9 @@ def test_nn_1_2():
     model.add_component(sink)    
     model.add_component(sink_2)
     
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
-    model.add_link(neural_network, neural_network.output_1, sink_2, sink_2.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
+    model.add_link(neural_network.output_1, sink_2.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -170,10 +170,10 @@ def test_nn_2_2():
     model.add_component(sink)    
     model.add_component(sink_2)
     
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(source_2, source_2.power_out, neural_network, neural_network.input_1, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
-    model.add_link(neural_network, neural_network.output_1, sink_2, sink_2.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(source_2.power_out, neural_network.input_1, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
+    model.add_link(neural_network.output_1, sink_2.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -210,8 +210,8 @@ def test_nn_1_15_15_1():
     model.add_component(neural_network)
     model.add_component(sink)    
 
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 10, 10, 30)
 
@@ -248,8 +248,8 @@ def test_nn_1_5_5_1():
     model.add_component(neural_network)
     model.add_component(sink)    
 
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 
@@ -287,8 +287,8 @@ def test_nn_1_5_5_5_5_5_5_1():
     model.add_component(neural_network)
     model.add_component(sink)    
 
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
 
     model.define_time_range(3600., 10, 10, 30)
 
@@ -329,10 +329,10 @@ def test_nn_2_5_5_5_2():
     model.add_component(sink)    
     model.add_component(sink_2)
 
-    model.add_link(source, source.power_out, neural_network, neural_network.input_0, 1., 0.)
-    model.add_link(source_2, source_2.power_out, neural_network, neural_network.input_1, 1., 0.)
-    model.add_link(neural_network, neural_network.output_0, sink, sink.power_in, 1., 0.)
-    model.add_link(neural_network, neural_network.output_1, sink_2, sink_2.power_in, 1., 0.)
+    model.add_link(source.power_out, neural_network.input_0, 1., 0.)
+    model.add_link(source_2.power_out, neural_network.input_1, 1., 0.)
+    model.add_link(neural_network.output_0, sink.power_in, 1., 0.)
+    model.add_link(neural_network.output_1, sink_2.power_in, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 3)
 

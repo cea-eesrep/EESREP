@@ -1,10 +1,12 @@
 """This file contains the EESREP generic neural network model."""
 import os
+from typing import Dict
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_enum import TimeSerieType
+from eesrep.eesrep_io import ComponentIO
 
 class NeuralNetwork(GenericComponent):
     """EESREP Neural network component definition. 
@@ -51,9 +53,9 @@ class NeuralNetwork(GenericComponent):
         self.time_series = {}
 
         for io in self.io_from_parameters():
-            setattr(self, io, io)
+            setattr(self, io, self.io_from_parameters()[io])
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component variables.
 
         Returns
@@ -64,21 +66,15 @@ class NeuralNetwork(GenericComponent):
                 - continuity (bool) : is the variable given in the next horizons history
 
         """
-        variable_dict = {}
+        io_dict = {}
 
         for i in range(self.inputs_count):
-            variable_dict[f"input_{i}"] = {
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":False
-                                        }
+            io_dict[f"input_{i}"] = ComponentIO(self.name, f"input_{i}", TimeSerieType.INTENSIVE, False)
 
         for i in range(self.outputs_count):
-            variable_dict[f"output_{i}"] = {
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":False
-                                        }
+            io_dict[f"output_{i}"] = ComponentIO(self.name, f"output_{i}", TimeSerieType.INTENSIVE, False)
 
-        return variable_dict
+        return io_dict
 
     def build_model(self,
         component_name:str,

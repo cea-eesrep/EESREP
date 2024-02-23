@@ -15,7 +15,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 @pytest.mark.Theory
 @pytest.mark.SourceLoad
@@ -39,9 +39,9 @@ def test_G_001_production_price():
     model.add_component(gas)
     model.add_component(load)
 
-    model.plug_to_bus(oil, "power_out", "bus_1", False, 1., 0.)
-    model.plug_to_bus(gas, "power_out", "bus_1", False, 1., 0.)
-    model.plug_to_bus(load, "power_in", "bus_1", True, 1., 0.)
+    model.plug_to_bus(oil.power_out, "bus_1", False, 1., 0.)
+    model.plug_to_bus(gas.power_out, "bus_1", False, 1., 0.)
+    model.plug_to_bus(load.power_in, "bus_1", True, 1., 0.)
 
     model.define_time_range(3600., 1, 1000, 1)
     model.solve()

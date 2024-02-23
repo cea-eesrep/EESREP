@@ -2,11 +2,13 @@
 
     - delayer: component whose output(t) = input(t-N)
 """
+from typing import Dict
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_enum import TimeSerieType
+from eesrep.eesrep_io import ComponentIO
 
 class Delayer(GenericComponent):
     """Component whose output(t) = input(t-N).
@@ -32,29 +34,21 @@ class Delayer(GenericComponent):
 
         self.time_series = {}
 
-        self.power_in = "power_in"
-        self.power_out = "power_out"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, True)
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                },
-                    "power_out":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                }
+                    "power_in": self.power_in,
+                    "power_out": self.power_out
                 }
 
     def build_model(self,
@@ -120,29 +114,21 @@ class Integral(GenericComponent):
 
         self.time_series = {}
 
-        self.power_in = "power_in"
-        self.power_out = "power_out"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, True)
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                },
-                    "power_out":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                }
+                    "power_in": self.power_in,
+                    "power_out": self.power_out
                 }
 
     def build_model(self,
@@ -221,24 +207,19 @@ class LowerThan(GenericComponent):
                                                     "value": value_serie
                                                 }
 
-        self.power_in = "power_in"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, True)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                }
+                    "power_in": self.power_in
                 }
 
     def build_model(self,
@@ -310,24 +291,19 @@ class GreaterThan(GenericComponent):
                                                     "value": value_serie
                                                 }
 
-        self.power_in = "power_in"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, True)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                }
+                    "power_in": self.power_in
                 }
 
     def build_model(self,

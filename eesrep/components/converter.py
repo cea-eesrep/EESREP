@@ -6,10 +6,12 @@ Two types are initially implemented:
     -   Converter : the output corresponds to the input multiplied by an efficiency.
     -   Cluster : models the behavior of N machines, that can be turned on and off."""
 
+from typing import Dict
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
 from eesrep.eesrep_enum import TimeSerieType
+from eesrep.eesrep_io import ComponentIO
 from eesrep.solver_interface.generic_interface import GenericInterface
 
 
@@ -40,29 +42,21 @@ class Converter(GenericComponent):
 
         self.time_series = {}
 
-        self.power_in = "power_in"
-        self.power_out = "power_out"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, False)
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
 
-    def io_from_parameters(self) -> dict:
-        """Lists the component Input/Output based on the component parameters.
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
+        """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                },
-                    "power_out":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                }
+                    "power_in": self.power_in,
+                    "power_out": self.power_out
                 }
 
     def build_model(self,
@@ -155,54 +149,31 @@ class Cluster(GenericComponent):
 
         self.time_series = {}
 
-        self.power_in = "power_in"
-        self.power_out = "power_out"
-        self.n_machine = "n_machine"
-        self.turn_on = "turn_on"
-        self.turn_off = "turn_off"
-        self.turn_on_count = "turn_on_count"
-        self.turn_off_count = "turn_off_count"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, False)
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
+        self.n_machine = ComponentIO(self.name, "n_machine", TimeSerieType.INTENSIVE, True)
+        self.turn_on = ComponentIO(self.name, "turn_on", TimeSerieType.INTENSIVE, True)
+        self.turn_off = ComponentIO(self.name, "turn_off", TimeSerieType.INTENSIVE, True)
+        self.turn_on_count = ComponentIO(self.name, "turn_on_count", TimeSerieType.INTENSIVE, True)
+        self.turn_off_count = ComponentIO(self.name, "turn_off_count", TimeSerieType.INTENSIVE, True)
 
-    def io_from_parameters(self) -> dict:
-        """Lists the component Input/Outputs based on the component parameters.
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
+        """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                },
-                    "power_out":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                },
-                    "n_machine":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                },
-                    "turn_on":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                },
-                    "turn_off":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                },
-                    "turn_on_count":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                },
-                    "turn_off_count":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":True
-                                }
+                    "power_in": self.power_in,
+                    "power_out": self.power_out,
+                    "n_machine": self.n_machine,
+                    "turn_on": self.turn_on,
+                    "turn_off": self.turn_off,
+                    "turn_on_count": self.turn_on_count,
+                    "turn_off_count": self.turn_off_count
                 }
 
     def build_model(self,

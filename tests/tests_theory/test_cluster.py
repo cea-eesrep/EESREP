@@ -20,7 +20,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 
 @pytest.mark.Theory
@@ -50,12 +50,12 @@ def test_C_001_start_necessary():
     model.add_component(cluster)
     model.add_component(fatal_sink)
 
-    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
-    model.add_link(cluster, "n_machine", sink, "power_in", 1., 0.)
+    model.add_link(source.power_out, cluster.power_in, 1., 0.)
+    model.add_link(cluster.n_machine, sink.power_in, 1., 0.)
 
-    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(cluster.power_out, "bus_1", True, 1., 0.)
 
-    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 
@@ -103,12 +103,12 @@ def test_C_002_p_min():
     model.add_component(cluster)
     model.add_component(fatal_sink)
 
-    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
+    model.add_link(source.power_out, cluster.power_in, 1., 0.)
 
-    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(cluster.power_out, "bus_1", True, 1., 0.)
 
-    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink.power_in, "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 
@@ -161,13 +161,13 @@ def test_C_003_stop_necessary():
     model.add_component(cluster)
     model.add_component(fatal_sink)
 
-    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
-    model.add_link(cluster, "n_machine", sink_n_machine, "power_in", 1., 0.)
+    model.add_link(source.power_out, cluster.power_in, 1., 0.)
+    model.add_link(cluster.n_machine, sink_n_machine.power_in, 1., 0.)
 
-    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(cluster.power_out, "bus_1", True, 1., 0.)
 
-    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink.power_in, "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 200, 200, 5)
 
@@ -217,12 +217,12 @@ def test_C_004_min_time():
     model.add_component(cluster)
     model.add_component(fatal_sink)
     
-    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
+    model.add_link(source.power_out, cluster.power_in, 1., 0.)
 
-    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
-    model.plug_to_bus(unsupplied, "power_out", "bus_1", True, 1., 0.)
-    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus(sink, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(cluster.power_out, "bus_1", True, 1., 0.)
+    model.plug_to_bus(unsupplied.power_out, "bus_1", True, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(sink.power_in, "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 200, 200, 5)
 
@@ -271,14 +271,14 @@ def test_C_005_min_off_time():
     model.add_component(cluster)
     model.add_component(fatal_sink)
 
-    model.add_link(source, "power_out", cluster, "power_in", 1., 0.)
+    model.add_link(source.power_out, cluster.power_in, 1., 0.)
 
-    model.plug_to_bus(cluster, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(cluster.power_out, "bus_1", True, 1., 0.)
 
-    model.plug_to_bus(unsupplied, "power_out", "bus_1", True, 1., 0.)
+    model.plug_to_bus(unsupplied.power_out, "bus_1", True, 1., 0.)
 
-    model.plug_to_bus(fatal_sink, "power_in", "bus_1", False, 1., 0.)
-    model.plug_to_bus(spilled, "power_in", "bus_1", False, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(spilled.power_in, "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 

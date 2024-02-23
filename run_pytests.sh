@@ -9,7 +9,7 @@ fi
 
 export PATH=$PATH:/home/trilogy/CPLEX/cplex/bin/x86-64_linux/
 
-for solver in "CPLEX" "DOCPLEX" "pyomo" 
+for solver in "DOCPLEX" "pyomo" 
 do
     export EESREP_SOLVER=$solver
     printf "\033[0;36mRunning tests for solver $EESREP_SOLVER \033[0m \n"

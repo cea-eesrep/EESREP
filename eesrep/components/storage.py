@@ -1,11 +1,13 @@
 """EESREP storage component definition"""
 
 import math
+from typing import Dict
 
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
 from eesrep.eesrep_enum import TimeSerieType
+from eesrep.eesrep_io import ComponentIO
 from eesrep.solver_interface.generic_interface import GenericInterface
 
 
@@ -48,30 +50,22 @@ class GenericStorage(GenericComponent):
         self.s_init = s_init
 
         self.time_series = {}
+        
+        self.flow = ComponentIO(self.name, "flow", TimeSerieType.INTENSIVE, False)
+        self.storage = ComponentIO(self.name, "storage", TimeSerieType.EXTENSIVE, True)
 
-        self.flow = "flow"
-        self.storage = "storage"
-
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "flow":{
-                                "type": TimeSerieType.INTENSIVE,
-                                "continuity":False
-                            },
-                    "storage":{
-                                "type": TimeSerieType.EXTENSIVE,
-                                "continuity":True
-                            }
+                    "flow": self.flow,
+                    "storage": self.storage
                 }
 
     def build_model(self,

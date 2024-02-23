@@ -218,28 +218,62 @@ OCGT_fuel = Source(name="OCGT_fuel",
                             p_max=None,
                             price=96.11)
 
+for c in [Nuclear_fuel, 
+            CCGT_fuel,
+            OCGT_fuel,
+    
+            Load_1, 
+            Poubelle_1, 
+            Reseau_1,
+            Solar_1,
+            Wind_1,
+            Hydro_ROR_1,
+            OCGT_1,
+            CCGT_1,
+            Nuclear_1,
+            Nuclear_1_2, 
+            Storage_1,
+
+            Load_2, 
+            Poubelle_2, 
+            Reseau_2,
+            Solar_2,
+            Wind_2,
+            Hydro_ROR_2,
+            OCGT_2,
+            OCGT_2_2,
+            CCGT_2,
+            CCGT_2_2,
+            Nuclear_2,
+            Nuclear_2_2,
+            Storage_2,
+
+            transfert_1_2,
+            transfert_2_1]:
+    model.add_component(c)
+
 #   Plugging fuels inputs
-model.plug_to_bus(Nuclear_fuel, Nuclear_fuel.power_out, "Nuclear_bus", True, 1., 0.)
-model.plug_to_bus(CCGT_fuel, CCGT_fuel.power_out, "CCGT_bus", True, 1., 0.)
-model.plug_to_bus(OCGT_fuel, OCGT_fuel.power_out, "OCGT_bus", True, 1., 0.)
+model.plug_to_bus(Nuclear_fuel.power_out, "Nuclear_bus", True, 1., 0.)
+model.plug_to_bus(CCGT_fuel.power_out, "CCGT_bus", True, 1., 0.)
+model.plug_to_bus(OCGT_fuel.power_out, "OCGT_bus", True, 1., 0.)
 
-model.plug_to_bus(Nuclear_1, Nuclear_1.power_in, "Nuclear_bus", False, 1., 0.)
-model.plug_to_bus(Nuclear_1_2, Nuclear_1_2.power_in, "Nuclear_bus", False, 1., 0.)
-model.plug_to_bus(Nuclear_2, Nuclear_2.power_in, "Nuclear_bus", False, 1., 0.)
-model.plug_to_bus(Nuclear_2_2, Nuclear_2_2.power_in, "Nuclear_bus", False, 1., 0.)
+model.plug_to_bus(Nuclear_1.power_in, "Nuclear_bus", False, 1., 0.)
+model.plug_to_bus(Nuclear_1_2.power_in, "Nuclear_bus", False, 1., 0.)
+model.plug_to_bus(Nuclear_2.power_in, "Nuclear_bus", False, 1., 0.)
+model.plug_to_bus(Nuclear_2_2.power_in, "Nuclear_bus", False, 1., 0.)
 
-model.plug_to_bus(CCGT_1, CCGT_1.power_in, "CCGT_bus", False, 1., 0.)
-model.plug_to_bus(CCGT_2, CCGT_2.power_in, "CCGT_bus", False, 1., 0.)
-model.plug_to_bus(CCGT_2_2, CCGT_2_2.power_in, "CCGT_bus", False, 1., 0.)
+model.plug_to_bus(CCGT_1.power_in, "CCGT_bus", False, 1., 0.)
+model.plug_to_bus(CCGT_2.power_in, "CCGT_bus", False, 1., 0.)
+model.plug_to_bus(CCGT_2_2.power_in, "CCGT_bus", False, 1., 0.)
 
-model.plug_to_bus(OCGT_1, OCGT_1.power_in, "OCGT_bus", False, 1., 0.)
-model.plug_to_bus(OCGT_2, OCGT_2.power_in, "OCGT_bus", False, 1., 0.)
-model.plug_to_bus(OCGT_2_2, OCGT_2_2.power_in, "OCGT_bus", False, 1., 0.)
+model.plug_to_bus(OCGT_1.power_in, "OCGT_bus", False, 1., 0.)
+model.plug_to_bus(OCGT_2.power_in, "OCGT_bus", False, 1., 0.)
+model.plug_to_bus(OCGT_2_2.power_in, "OCGT_bus", False, 1., 0.)
 
 
 #   Zone 1
 for component in [Load_1, Poubelle_1]:
-    model.plug_to_bus(component, component.power_in, "Zone_1", False, 1., 0.)
+    model.plug_to_bus(component.power_in, "Zone_1", False, 1., 0.)
 
 for component in [Reseau_1,
                 Solar_1,
@@ -249,13 +283,13 @@ for component in [Reseau_1,
                 CCGT_1,
                 Nuclear_1,
                 Nuclear_1_2]:
-    model.plug_to_bus(component, component.power_out, "Zone_1", True, 1., 0.)
+    model.plug_to_bus(component.power_out, "Zone_1", True, 1., 0.)
 
-model.plug_to_bus(Storage_1, Storage_1.flow, "Zone_1", False, 1., 0.)
+model.plug_to_bus(Storage_1.flow, "Zone_1", False, 1., 0.)
 
 #   Zone 2
 for component in [Load_2, Poubelle_2]:
-    model.plug_to_bus(component, component.power_in, "Zone_2", False, 1., 0.)
+    model.plug_to_bus(component.power_in, "Zone_2", False, 1., 0.)
 
 for component in [Reseau_2,
                 Solar_2,
@@ -267,16 +301,16 @@ for component in [Reseau_2,
                 CCGT_2_2,
                 Nuclear_2,
                 Nuclear_2_2]:
-    model.plug_to_bus(component, component.power_out, "Zone_2", True, 1., 0.)
+    model.plug_to_bus(component.power_out, "Zone_2", True, 1., 0.)
 
-model.plug_to_bus(Storage_2, Storage_2.flow, "Zone_2", False, 1., 0.)
+model.plug_to_bus(Storage_2.flow, "Zone_2", False, 1., 0.)
 
 #   Transfers
-model.plug_to_bus(transfert_1_2,transfert_1_2.power_in, "Zone_1", False, 1., 0.)
-model.plug_to_bus(transfert_1_2, transfert_1_2.power_out, "Zone_2", True, 1., 0.)
+model.plug_to_bus(transfert_1_2.power_in, "Zone_1", False, 1., 0.)
+model.plug_to_bus(transfert_1_2.power_out, "Zone_2", True, 1., 0.)
 
-model.plug_to_bus(transfert_2_1, transfert_2_1.power_in, "Zone_2", False, 1., 0.)
-model.plug_to_bus(transfert_2_1, transfert_2_1.power_out, "Zone_1", True, 1., 0.)
+model.plug_to_bus(transfert_2_1.power_in, "Zone_2", False, 1., 0.)
+model.plug_to_bus(transfert_2_1.power_out, "Zone_1", True, 1., 0.)
 
 
 

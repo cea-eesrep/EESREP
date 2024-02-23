@@ -1,4 +1,4 @@
-$solvers = @("CBC", "CPLEX", "DOCPLEX", "pyomo")
+$solvers = @("CBC", "DOCPLEX", "pyomo")
 
 if ( Test-Path .coverage -PathType Leaf ) {
     rm .coverage

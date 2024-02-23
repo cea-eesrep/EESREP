@@ -252,3 +252,19 @@ class GenericInterface(ABC):
             Must be overridden by the solver interface
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def get_results_from_variables(self) -> float:
+        """Returns the objective value of the solution.
+
+        Returns
+        -------
+        float
+            Solution objective value
+
+        Raises
+        ------
+        NotImplementedError
+            Must be overridden by the solver interface
+        """        
+        raise NotImplementedError

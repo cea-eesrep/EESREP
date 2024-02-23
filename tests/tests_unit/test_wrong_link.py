@@ -2,6 +2,7 @@
 from os import environ
 
 import pandas as pd
+from eesrep.eesrep_io import ComponentIO
 import pytest
 
 import eesrep
@@ -19,7 +20,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 
 class FakeComponent(GenericComponent):
@@ -38,16 +39,13 @@ class FakeComponent(GenericComponent):
                                                     "type": TimeSerieType.EXTENSIVE,
                                                     "value": extensive_ts
                                                 }
+        self.intensive_var = ComponentIO(self.name, "intensive_var", TimeSerieType.INTENSIVE, False)
+        self.extensive_var = ComponentIO(self.name, "extensive_var", TimeSerieType.EXTENSIVE, False)
+
     def io_from_parameters(self) -> dict:
         return { 
-                    "intensive_var":{
-                                        "type": TimeSerieType.INTENSIVE,
-                                        "continuity": False
-                                    },
-                    "extensive_var":{
-                                        "type": TimeSerieType.EXTENSIVE,
-                                        "continuity": False
-                                    }
+                    "intensive_var": self.intensive_var,
+                    "extensive_var": self.extensive_var
                 }
 
     def build_model(self,
@@ -71,7 +69,7 @@ def test_solve_link_wrong_component_1():
     model.add_component(fake)
     
     try:
-        model.add_link(wrong_component, "var", fake, "intensive_var", 1., 0.)
+        model.add_link(wrong_component.intensive_var, fake.intensive_var, 1., 0.)
         assert False, "Component does not exist"
     except ComponentNameException:
         assert True
@@ -89,7 +87,7 @@ def test_solve_link_wrong_component_2():
     model.add_component(fake)
     
     try:
-        model.add_link(fake, "intensive_var", wrong_component, "var", 1., 0.)
+        model.add_link(fake.intensive_var, wrong_component.intensive_var, 1., 0.)
         assert False, "Component does not exist"
     except ComponentNameException:
         assert True
@@ -108,7 +106,7 @@ def test_solve_link_wrong_component_1_variable():
     model.add_component(fake2)
     
     try:
-        model.add_link(fake, "intensive_var1", fake2, "intensive_var", 1., 0.)
+        model.add_link(ComponentIO("fake", "var", TimeSerieType.INTENSIVE, False), fake2.intensive_var, 1., 0.)
         assert False, "Component variable does not exist"
     except ComponentIOException:
         assert True
@@ -127,7 +125,7 @@ def test_solve_link_wrong_component_2_variable():
     model.add_component(fake2)
     
     try:
-        model.add_link(fake, "intensive_var", fake2, "intensive_var1", 1., 0.)
+        model.add_link(fake.intensive_var, ComponentIO("fake", "var", TimeSerieType.INTENSIVE, False), 1., 0.)
         assert False, "Component variable does not exist"
     except ComponentIOException:
         assert True
@@ -145,7 +143,7 @@ def test_solve_bus_plug_wrong_component():
     model.create_bus("bus", {"name":"bus"})
     
     try:
-        model.plug_to_bus(wrong_component, "var", "bus", True, 1., 0.)
+        model.plug_to_bus(wrong_component.intensive_var, "bus", True, 1., 0.)
         assert False, "Component does not exist"
     except ComponentNameException:
         assert True
@@ -164,7 +162,7 @@ def test_solve_bus_plug_wrong_component_variable():
     model.create_bus("bus", {"name":"bus"})
     
     try:
-        model.plug_to_bus(fake, "wrong_var", "bus", True, 1., 0.)
+        model.plug_to_bus(ComponentIO("fake", "var", TimeSerieType.INTENSIVE, False), "bus", True, 1., 0.)
         assert False, "Component does not exist"
     except ComponentIOException:
         assert True
@@ -182,7 +180,7 @@ def test_solve_bus_plug_wrong_bus():
     model.add_component(fake)
     
     try:
-        model.plug_to_bus(fake, "intensive_var", "bus", True, 1., 0.)
+        model.plug_to_bus(fake.intensive_var, "bus", True, 1., 0.)
         assert False, "Component does not exist"
     except BusNameException:
         assert True

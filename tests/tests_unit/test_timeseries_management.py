@@ -1,5 +1,6 @@
 
 from os import environ
+from eesrep.eesrep_io import ComponentIO
 import pytest
 
 import pandas as pd
@@ -19,7 +20,7 @@ else:
 if solver_for_tests == "CBC":
     interface_for_tests = "mip"
 else:
-    interface_for_tests = "cplex"
+    interface_for_tests = "docplex"
 
 
 class FakeComponent(GenericComponent):
@@ -37,17 +38,16 @@ class FakeComponent(GenericComponent):
                                                     "type": TimeSerieType.EXTENSIVE,
                                                     "value": extensive_ts
                                                 }
+                                                
+        self.intensive_var = ComponentIO(self.name, "intensive_var", TimeSerieType.INTENSIVE, False)
+        self.extensive_var = ComponentIO(self.name, "extensive_var", TimeSerieType.EXTENSIVE, False)
+
     def io_from_parameters(self) -> dict:
         return { 
-                    "intensive_var":{
-                                        "type": TimeSerieType.INTENSIVE,
-                                        "continuity": False
-                                    },
-                    "extensive_var":{
-                                        "type": TimeSerieType.EXTENSIVE,
-                                        "continuity": False
-                                    }
+                    "intensive_var": self.intensive_var,
+                    "extensive_var": self.extensive_var
                 }
+
 
     def build_model(self,
         component_name:str,

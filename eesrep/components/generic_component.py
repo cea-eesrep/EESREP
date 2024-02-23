@@ -7,9 +7,10 @@ defined here:
     -   io_from_parameters : returns the Input/Outputs of a component, provided a set of parameters.
     -   build_model : creates the model component variables and constraints.
 """
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
+from eesrep.eesrep_io import ComponentIO
 
 from eesrep.solver_interface.generic_interface import GenericInterface
 
@@ -37,15 +38,13 @@ class GenericComponent:
         """
         raise NotImplementedError
 
-    def io_from_parameters(self) -> dict:
-        """Lists the component Input/Outputs based on the component parameters.
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
+        """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         Raises
         ------

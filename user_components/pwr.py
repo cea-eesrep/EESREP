@@ -2,6 +2,7 @@
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
+from eesrep.eesrep_io import ComponentIO
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_enum import TimeSerieType
 
@@ -53,11 +54,11 @@ class Pwr(GenericComponent):
 
         self.time_series = {}
 
-        self.power_in = "power_in"
-        self.power_out = "power_out"
-        self.efpd = "efpd"
-        self.manoeuver = "manoeuver"
-        self.power_step = "power_step"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, False)
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
+        self.efpd = ComponentIO(self.name, "efpd", TimeSerieType.INTENSIVE, True)
+        self.manoeuver = ComponentIO(self.name, "manoeuver", TimeSerieType.INTENSIVE, True)
+        self.power_step = ComponentIO(self.name, "power_step", TimeSerieType.INTENSIVE, True)
     
     def io_from_parameters(self) -> dict:
         """Lists the component variables.
@@ -71,29 +72,14 @@ class Pwr(GenericComponent):
 
         """
         variable_dict = {
-                            "power_in":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":False
-                                        },
-                            "power_out":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":False
-                                        },
-                            "efpd":{
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":True
-                                        }
+                            "power_in": self.power_in,
+                            "power_out": self.power_out,
+                            "efpd": self.efpd
                         }
         
         if True:
-            variable_dict["manoeuver"]={
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":True
-                                            }
-            variable_dict["power_step"]={
-                                            "type": TimeSerieType.INTENSIVE,
-                                            "continuity":True
-                                            }
+            variable_dict["manoeuver"]= self.manoeuver
+            variable_dict["power_step"]= self.power_step
 
         return variable_dict
 

@@ -8,9 +8,11 @@ These models are used to provide energy to the system, or pull energy from it. T
     - FatalSink : energy output that is forced to the system.
 
 """
+from typing import Dict
 import pandas as pd
 
 from eesrep.components.generic_component import GenericComponent
+from eesrep.eesrep_io import ComponentIO
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_enum import TimeSerieType
 
@@ -62,24 +64,19 @@ class Source(GenericComponent):
                                                     "value": price_variation
                                                 }
 
-        self.power_out = "power_out"
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_out":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                }
+                    "power_out": self.power_out
                 }
 
     def build_model(self,
@@ -167,24 +164,19 @@ class Sink(GenericComponent):
                                                     "value": price_variation
                                                 }
 
-        self.power_in = "power_in"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, False)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                }
+                    "power_in": self.power_in
                 }
 
     def build_model(self,
@@ -260,24 +252,19 @@ class FatalSource(GenericComponent):
                                                     "value": source_flow
                                                 }
 
-        self.power_out = "power_out"
+        self.power_out = ComponentIO(self.name, "power_out", TimeSerieType.INTENSIVE, False)
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_out":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                }
+                    "power_out": self.power_out
                 }
 
     def build_model(self,
@@ -345,25 +332,20 @@ class FatalSink(GenericComponent):
                                                 "value": sink_flow
                                             }
 
-        self.power_in = "power_in"
+        self.power_in = ComponentIO(self.name, "power_in", TimeSerieType.INTENSIVE, False)
         
 
-    def io_from_parameters(self) -> dict:
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
         """Lists the component Input/Outputs.
 
         Returns
         -------
         dict
-            Dictionnary listing the Input/Outputs and their properties, each Input/Output has the two following keys:
-                - type (TimeSerieType) : is the Input/Output intensive or extensive
-                - continuity (bool) : is the Input/Output given in the next horizons history
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
 
         """
         return {
-                    "power_in":{
-                                    "type": TimeSerieType.INTENSIVE,
-                                    "continuity":False
-                                }
+                    "power_in": self.power_in
                 }
 
     def build_model(self,

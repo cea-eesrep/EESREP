@@ -61,12 +61,12 @@ def test_PWR_001():
     model.add_component(pwr)
 
 
-    model.add_link(source, source.power_out, pwr, pwr.power_in, 1., 0.)
+    model.add_link(source.power_out, pwr.power_in, 1., 0.)
 
-    model.plug_to_bus(pwr, pwr.power_out, "bus_1", True, 1., 0.)
-    model.plug_to_bus(unsupplied, unsupplied.power_out, "bus_1", True, 1., 0.)
-    model.plug_to_bus(fatal_sink, fatal_sink.power_in, "bus_1", False, 1., 0.)
-    model.plug_to_bus(spilled, spilled.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(pwr.power_out, "bus_1", True, 1., 0.)
+    model.plug_to_bus(unsupplied.power_out, "bus_1", True, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(spilled.power_in, "bus_1", False, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 
