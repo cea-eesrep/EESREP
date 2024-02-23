@@ -11,7 +11,7 @@ from eesrep.components.converter import Converter
 from eesrep.components.generic_component import GenericComponent
 from eesrep.components.sink_source import FatalSink, Source
 from eesrep.eesrep_enum import TimeSerieType
-from eesrep.eesrep_exceptions import UndefinedTimeRangeException
+from eesrep.eesrep_exceptions import ComponentIOException, ComponentNameException, UndefinedTimeRangeException
 from eesrep.solver_interface.generic_interface import GenericInterface
 
 if "EESREP_SOLVER" not in environ:
@@ -379,4 +379,59 @@ def test_solve_maximize():
     results_df = model.get_results(as_dataframe=True)
     
     assert np.average(results_df["fake_intensive_var"].values) == 10, "Results should always be at 10, its maximum."
+
+@pytest.mark.Unit
+@pytest.mark.solve
+def test_add_io_to_objective():
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+
+    source_1 = Source("source_1", 0., 100., 1.)
+    source_2 = Source("source_2", 0., 100., 2.)
+
+    model.add_component(source_1)
+    model.add_component(source_2)
+
+    model.create_bus("bus", {"name":"bus"})
+
+    load = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
+    model.add_component(load)
     
+    model.plug_to_bus(source_1.power_out, "bus", True, 1., 0.)
+    model.plug_to_bus(source_2.power_out, "bus", True, 1., 0.)
+    model.plug_to_bus(load.power_in, "bus", False, 1., 0.)
+
+    model.add_io_to_objective(source_1.power_out, price=50.)
+    model.define_time_range(1., 1, 5, 1)
+    model.solve()
+
+    results_df = model.get_results(as_dataframe=True)
+
+    assert results_df["source_1_power_out"].max() == 0.
+
+@pytest.mark.Unit
+@pytest.mark.solve
+def test_add_io_to_objective_wrong_component():
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+
+    source_1 = Source("source_1", 0., 100., 1.)
+
+    try:
+        model.add_io_to_objective(source_1.power_out, price=50.)
+        assert False, "Adding to objective the IO of a not known component"
+    except ComponentNameException:
+        assert True
+    
+
+@pytest.mark.Unit
+@pytest.mark.solve
+def test_add_io_to_objective_wrong_io():
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+
+    source_1 = Source("source_1", 0., 100., 1.)
+    model.add_component(source_1)
+
+    try:
+        model.add_io_to_objective(ComponentIO("source_1", "wrong_io", TimeSerieType.INTENSIVE, False), price=50.)
+        assert False, "The provided IO does not exist for given component."
+    except ComponentIOException:
+        assert True

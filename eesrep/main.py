@@ -66,7 +66,7 @@ class Eesrep:
         self.__model : GenericInterface = None
 
         self.__components: Dict[str, GenericComponent] = {}
-        self.__variables: Dict[str, Dict] = {}
+        self.__variables: Dict[str, Dict[str, Any]] = {}
         self.__buses: Dict[str, Dict[str, List[str or float]]] = {}
         self.__results: pd.DataFrame = pd.DataFrame()
         self.__links: List[str, Any, str, Any , float, float] = []
@@ -522,6 +522,7 @@ class Eesrep:
             Wrong input/output name for given component.
         ComponentIOException
             Wrong input/output name for given component.
+
         """
         component_name_1 = io_1.component_name
         component_name_2 = io_2.component_name
@@ -592,6 +593,32 @@ class Eesrep:
         else:
             self.__buses[bus_name]["outputs"].append([component_name_1, io.io_name, factor, offset])
 
+    def add_io_to_objective(self, io:ComponentIO, price:float=0.):
+        """Adds a component input/output to the objective at a given price
+
+        Parameters
+        ----------
+        io : ComponentIO
+            Input/output to add to the objective
+        price : float, optional
+            Price per unit of the input/output, by default 0.
+
+        Raises
+        ------
+        ComponentNameException
+            No component at this name in the model
+        ComponentIOException
+            No such IO name for the given component name
+        """        
+        if not io.component_name in self.__components:
+            raise ComponentNameException(io.component_name)
+
+        if not io.io_name in self.__components[io.component_name].io_from_parameters():
+            raise ComponentIOException(io.component_name, io.io_name)
+
+        if price != 0.:
+            self.__objective_io_list.append((io, price))
+        
     #@profile
     def __interpolate(self, dataframe:pd.DataFrame, times:list, column_name:str) -> np.ndarray:
         """Get the values at the given times of the requested column in a pandas dataframe.
@@ -879,9 +906,9 @@ class Eesrep:
             self.__variables[component.name] = variables
             self.__objective = self.__model.sum_variables([self.__objective, objective])
 
-        #   TODO
         for io_ in self.__objective_io_list:
-            pass
+            objective = self.__model.sum_variables([io_[1]*var for var in self.__variables[io_[0].component_name][io_[0].io_name]])
+            self.__objective = self.__model.sum_variables([self.__objective, objective])
 
         for link in self.__links:
             self._create_link(link)
