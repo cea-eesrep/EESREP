@@ -45,9 +45,9 @@ jobs:
     - name: Test with pytest windows
       if: runner.os == 'Windows'
       run: |
-        $env:EESREP_SOLVER="CBC"
+        $env:EESREP_INTERFACE="mip"
         coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
-        $env:EESREP_SOLVER="DOCPLEX"
+        $env:EESREP_INTERFACE="DOCPLEX"
         coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
         # export SOLVER_INTERFACE="PYOMO"
         # coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
@@ -56,11 +56,11 @@ jobs:
     - name: Test with pytest linux
       if: ${{runner.os == 'Linux'}}
       run: |
-        export EESREP_SOLVER="CBC"
+        export EESREP_INTERFACE="mip"
         coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
-        export EESREP_SOLVER="DOCPLEX"
+        export EESREP_INTERFACE="DOCPLEX"
         coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
-        # export EESREP_SOLVER="PYOMO"
+        # export EESREP_INTERFACE="PYOMO"
         # coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
         coverage report
         pytest --nbmake tutorials
