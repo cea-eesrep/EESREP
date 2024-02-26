@@ -35,6 +35,14 @@ except ImportError:
         def __init__(self, direction:str = "Minimize", solver:str = "CPLEX"):
                 raise ImportError("Error while importing Pyomo Interface. Make sure you have the pyomo module installed.")
 
+try:
+    from .solver_interface.ortools_interface import OrtoolsInterface
+except ImportError:
+    class OrtoolsInterface:
+        """ Fake OrtoolsInterface class for import error management. """
+        def __init__(self, direction:str = "Minimize", solver:str = "SAT"):
+                raise ImportError("Error while importing Ortools Interface. Make sure you have the ortools module installed.")
+
 from .eesrep_enum import TimeSerieType
 
 
@@ -103,9 +111,9 @@ class Eesrep:
             ------
                 ValueError: The solver argument provided while creating an Eesrep object is not correct.
         """
-        if self.__interface.lower() not in ["mip", "docplex", "pyomo"] + list(self.__custom_interfaces.keys()):
+        if self.__interface.lower() not in ["mip", "docplex", "pyomo", "ortools"] + list(self.__custom_interfaces.keys()):
             raise ValueError(
-                f"Interface name {self.__interface} is not implemented, please use: mip, pyomo, docplex or register your interface first.")
+                f"Interface name {self.__interface} is not implemented, please use: mip, pyomo, docplex, ortools or register your interface first.")
 
         if self.__interface in self.__custom_interfaces:
             self.__model = self.__custom_interfaces[self.__interface](direction = self.__direction , solver = self.__solver)
@@ -114,11 +122,13 @@ class Eesrep:
             self.__model = MIPInterface(direction = self.__direction , solver = self.__solver)
 
         elif self.__interface.lower() == "docplex":
-            self.__solver = "CPLEX"
             self.__model = DocplexInterface(direction = self.__direction)
 
         elif self.__interface.lower() == "pyomo":
             self.__model = PyomoInterface(direction = self.__direction, solver=self.__solver)
+
+        elif self.__interface.lower() == "ortools":
+            self.__model = OrtoolsInterface(direction = self.__direction, solver=self.__solver)
 
     #@profile
     def register_solver_interface(self, interface_name:str, interface:GenericInterface):
@@ -137,7 +147,7 @@ class Eesrep:
         ValueError
             Custom solver interface already exists with this key.
         """
-        if interface_name in self.__custom_interfaces or interface_name.lower() in ["cbc", "gurobi", "docplex", "pyomo"]:
+        if interface_name in self.__custom_interfaces or interface_name.lower() in ["cbc", "docplex", "pyomo", "ortools"]:
             raise ValueError(f"A custom interface already exists at the key '{interface_name}'")
 
         tester = InterfaceTester()
