@@ -4,10 +4,10 @@ from os import environ
 
 def get_couple_from_key():
     if "EESREP_INTERFACE" not in environ:
-        interface_for_tests = "ortools"
+        interface_for_tests = "mip"
     else:
         interface_for_tests = environ["EESREP_INTERFACE"].lower()
-
+        
     if interface_for_tests == "mip":
         solver_for_tests = "cbc"
     elif interface_for_tests == "docplex":
