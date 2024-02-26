@@ -9,7 +9,7 @@ from setuptools import find_packages, setup
 
 setup(
             name='eesrep',
-            version='0.1.3',
+            version='0.1.4',
             description='EESREP is a component based energy system optimisation python module.',
             long_description='EESREP is a component based energy system optimisation python module.',
             author='CEA',

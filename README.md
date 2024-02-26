@@ -101,7 +101,7 @@ https://readthedocs.org/projects/eesrep/
 -   MILP model, tips & tricks :
 	-   Avoid strict constraints : 
 		-   A very expensive source and sink can make the problem much easier to solve at no cost;
-		-   Boundaries can be replaced by an expensive cost for every unit beyond this boundray, which can significantly improve the solving time.
+		-   Boundaries can be replaced by an expensive cost for every unit beyond this boundary, which can significantly improve the solving time.
 	-   Avoid identical components/variable: Making the solver decide between two identical means can increase the solving time, give random looking solutions, and can change from a solve to the next. This can be prevented by adding a negligible different price to each identical component.
 
 
