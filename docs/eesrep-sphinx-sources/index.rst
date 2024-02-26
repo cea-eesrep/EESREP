@@ -9,6 +9,8 @@ Welcome to eesrep's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   
+   md_doc/README.md
 
    tutorials/tutorials.rst
 
