@@ -49,8 +49,8 @@ jobs:
         coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
         $env:EESREP_INTERFACE="DOCPLEX"
         coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
-        # export SOLVER_INTERFACE="PYOMO"
-        # coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
+        export SOLVER_INTERFACE="PYOMO"
+        coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
         coverage report
         pytest --nbmake tutorials
     - name: Test with pytest linux
@@ -60,8 +60,8 @@ jobs:
         coverage run -a --source=eesrep -m pytest tests --tb=short -W ignore::DeprecationWarning
         export EESREP_INTERFACE="DOCPLEX"
         coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
-        # export EESREP_INTERFACE="PYOMO"
-        # coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
+        export EESREP_INTERFACE="PYOMO"
+        coverage run -a --source=eesrep -m pytest tests/tests_unit --tb=short -W ignore::DeprecationWarning
         coverage report
         pytest --nbmake tutorials
       
