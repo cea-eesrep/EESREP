@@ -18,7 +18,9 @@ Submodules
 
    eesrep.eesrep_enum
    eesrep.eesrep_exceptions
+   eesrep.eesrep_io
    eesrep.main
+   eesrep.test_interface_solver
 
 Module contents
 ---------------
