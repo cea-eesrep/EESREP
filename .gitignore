@@ -4,6 +4,8 @@
 *.lp
 *.lprof
 profiling
+*.nl
+*.sol
 
 # Folders
 eesrep.egg-info

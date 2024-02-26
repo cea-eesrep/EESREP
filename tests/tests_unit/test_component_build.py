@@ -8,16 +8,9 @@ import pandas as pd
 
 import eesrep
 from eesrep.eesrep_io import ComponentIO
+from eesrep.test_interface_solver import get_couple_from_key
 
-if "EESREP_SOLVER" not in environ:
-    solver_for_tests = "CBC"
-else:
-    solver_for_tests = environ["EESREP_SOLVER"]
-
-if solver_for_tests == "CBC":
-    interface_for_tests = "mip"
-else:
-    interface_for_tests = "docplex"
+solver_for_tests, interface_for_tests = get_couple_from_key()
 
 @pytest.mark.Unit
 @pytest.mark.component_io

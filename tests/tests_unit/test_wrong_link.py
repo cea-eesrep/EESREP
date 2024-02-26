@@ -11,16 +11,9 @@ from eesrep.eesrep_enum import TimeSerieType
 from eesrep.eesrep_exceptions import (BusNameException, ComponentIOException,
                                       ComponentNameException)
 from eesrep.solver_interface.generic_interface import GenericInterface
+from eesrep.test_interface_solver import get_couple_from_key
 
-if "EESREP_SOLVER" not in environ:
-    solver_for_tests = "CBC"
-else:
-    solver_for_tests = environ["EESREP_SOLVER"]
-
-if solver_for_tests == "CBC":
-    interface_for_tests = "mip"
-else:
-    interface_for_tests = "docplex"
+solver_for_tests, interface_for_tests = get_couple_from_key()
 
 
 class FakeComponent(GenericComponent):

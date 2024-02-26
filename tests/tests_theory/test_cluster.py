@@ -11,17 +11,9 @@ import pytest
 from eesrep.components.converter import Cluster
 
 from eesrep.components.sink_source import FatalSink, Sink, Source
+from eesrep.test_interface_solver import get_couple_from_key
 
-if "EESREP_SOLVER" not in environ:
-    solver_for_tests = "CBC"
-else:
-    solver_for_tests = environ["EESREP_SOLVER"]
-
-if solver_for_tests == "CBC":
-    interface_for_tests = "mip"
-else:
-    interface_for_tests = "docplex"
-
+solver_for_tests, interface_for_tests = get_couple_from_key()
 
 @pytest.mark.Theory
 @pytest.mark.Cluster
@@ -294,4 +286,4 @@ def test_C_005_min_off_time():
 
 
 if __name__ == "__main__":
-    test_C_001_start_necessary()
+    test_C_002_p_min()

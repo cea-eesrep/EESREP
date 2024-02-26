@@ -7,16 +7,9 @@ from eesrep import Eesrep
 from eesrep.components.converter import Cluster
 from eesrep.components.dam import Dam
 from eesrep.components.sink_source import FatalSink, Sink, Source
+from eesrep.test_interface_solver import get_couple_from_key
 
-if "EESREP_SOLVER" not in environ:
-    solver_for_tests = "CBC"
-else:
-    solver_for_tests = environ["EESREP_SOLVER"]
-
-if solver_for_tests == "CBC":
-    interface_for_tests = "mip"
-else:
-    interface_for_tests = "docplex"
+solver_for_tests, interface_for_tests = get_couple_from_key()
 
 @pytest.mark.Theory
 @pytest.mark.Dam
@@ -82,7 +75,6 @@ def test_H_004_variable_minimum_storage():
 
     unsupplied = Source("unsupplied", 0., 10000., 10.)
     spilled = Sink("spilled", 0., 10000., 5000.)
-    null_source = Source("null_source", 0., 0., 1.)
     fatal_sink = FatalSink("fatal_sink", (data_ts[["Time", "Load"]]).rename(columns={"Time":"time", "Load":"value"}))
 
     dam = Dam("dam", 
@@ -94,7 +86,7 @@ def test_H_004_variable_minimum_storage():
                                 0.,
                                 1.,
                                 False,
-                                True,
+                                False,
                                 -1.,
                                 0.,
                                 water_inflow = 
@@ -104,11 +96,8 @@ def test_H_004_variable_minimum_storage():
 
     model.add_component(unsupplied)
     model.add_component(spilled)
-    model.add_component(null_source)
     model.add_component(dam)
     model.add_component(fatal_sink)
-
-    model.add_link(null_source.power_out, dam.power_in, 1., 0.)
 
     model.plug_to_bus(dam.power_out, "bus_1", True, 1., 0.)
 
@@ -117,12 +106,12 @@ def test_H_004_variable_minimum_storage():
     model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
     model.plug_to_bus(spilled.power_in, "bus_1", False, 1., 0.)
 
-    model.define_time_range(3600., 1000, 1000, 1)
+    model.define_time_range(3600., 1, 1000, 1)
 
     model.solve()
 
     results = model.get_results(as_dataframe=True)
-
+    
     #   Relaxed condition as significative figures is too low.
     assert min(np.array(results["dam_storage"]) - np.array((500000.*data_ts["Stockage_Min"]).iloc[1:-1])) >= -1e-5
 

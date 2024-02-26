@@ -212,7 +212,7 @@ class Cluster(GenericComponent):
         variables["turn_on_count"] = model_interface.get_new_continuous_variable_list(component_name+"_turn_on_count_", len(time_steps), None, None)
         variables["turn_off_count"] = model_interface.get_new_continuous_variable_list(component_name+"_turn_off_count_", len(time_steps), None, None)
 
-        variables["n_machine"] = model_interface.get_new_discrete_variable_list(component_name+"_n_machine_in_", len(time_steps), 0., self.n_machine_max)
+        variables["n_machine"] = model_interface.get_new_discrete_variable_list(component_name+"_n_machine_", len(time_steps), 0., self.n_machine_max)
 
         for i in range(len(time_steps)):
             #   Power_out = f(Power_in)
