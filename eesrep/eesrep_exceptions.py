@@ -47,3 +47,7 @@ class UnsolvableProblemException(Exception):
 class UndefinedTimeRangeException(Exception):
     def __init__(self):
         super().__init__("Problem time range undefined.")
+
+class UnsolvedProblemException(Exception):
+    def __init__(self):
+        super().__init__("The problem was not solved yet.")

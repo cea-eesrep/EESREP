@@ -254,7 +254,7 @@ class GenericInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_results_from_variables(self) -> float:
+    def get_result_objective(self) -> float:
         """Returns the objective value of the solution.
 
         Returns

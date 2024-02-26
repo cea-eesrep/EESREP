@@ -77,6 +77,7 @@ class Eesrep:
         self.__steps_solved: int = 0
 
         self.__objective: int = 0.
+        self.__cumulated_objective: int = 0.
         self.__objective_io_list: List[Tuple[ComponentIO, float]] = []
 
         self.__time_range_defined: bool = False
@@ -87,6 +88,7 @@ class Eesrep:
         self.time_shift: int = -1
         self.future_size: int = -1
         self.horizon_count: int = -1
+        self.__solved_horizons: int = 0
         self.custom_steps: List[float] = []
         self.solve_parameters: dict = {}
 
@@ -284,6 +286,22 @@ class Eesrep:
 
         result_dict["time"] = self.__results["time"]
         return result_dict
+
+    def get_objective_value(self) -> float:
+        """Returns the cumulated value of the objective.
+
+        Warning: if several horizons were solved, it returns the sum of the horizons objectives, 
+        this function does not cut the horizons overlaps
+
+        Returns
+        -------
+        float
+            Objective value of the model
+        """
+        if self.__solved_horizons > 1 and self.time_shift < self.future_size:
+            print("/!\\ Several horizons were solved, the horizons overlaps contribution to objective are not removed /!\\")
+            
+        return self.__cumulated_objective
 
     #@profile
     def get_components(self) -> dict:
@@ -867,6 +885,7 @@ class Eesrep:
         """Resets the created MILP model.
         """
         self.__objective = 0.
+        self.__solved_horizons = 0
         self.__variables = {}
 
         self.create_model_interface()
@@ -928,6 +947,7 @@ class Eesrep:
         """Terminates the current solved horizon and creates builds the results dataframe."""
         self.__steps_solved += 1
         self._build_results()
+        self.__cumulated_objective += self.__model.get_result_objective()
 
     #@profile
     def _create_link(self, link_properties:dict):

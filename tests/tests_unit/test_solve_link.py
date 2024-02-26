@@ -109,6 +109,31 @@ def test_solve_get_results():
     assert np.max(np.abs(results_df["load_power_in"].values - np.array(results["load"]["power_in"]))) == 0, "Error in dict construction"
     assert np.max(np.abs(results_df["source_power_out"].values - np.array(results["source"]["power_out"]))) == 0, "Error in dict construction"
 
+@pytest.mark.Unit
+@pytest.mark.solve
+def test_solve_get_objective():
+    """
+        Tests if the cluster starts the right amount of machines
+    """
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    model.define_time_range(1., 1, 3, 1)
+    make_basic_model(model, 1., 0.)
+    model.solve()
+
+    assert model.get_objective_value() == 1+2+3, "Wrong objective returned."
+
+@pytest.mark.Unit
+@pytest.mark.solve
+def test_solve_get_objective_multi_horizon():
+    """
+        Tests if the cluster starts the right amount of machines
+    """
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    model.define_time_range(1., 1, 3, 3)
+    make_basic_model(model, 1., 0.)
+    model.solve()
+
+    assert model.get_objective_value() == 1+2+3 + 2+3+4 + 3+4+5, "Wrong objective returned."
     
 @pytest.mark.Unit
 @pytest.mark.solve

@@ -25,6 +25,7 @@ class DocplexInterface(GenericInterface):
             self.__direction = "max"
 
         self.__model = Model()
+        self.solve_status = None
 
     def get_new_continuous_variable(
         self,
@@ -218,9 +219,9 @@ class DocplexInterface(GenericInterface):
         if "write_problem" in solve_parameters and solve_parameters["write_problem"]:
             self.__model.export_as_lp("my_problem.lp")
 
-        solve_status = self.__model.solve(log_output = "write_log" in solve_parameters and solve_parameters["write_log"])
+        self.solve_status = self.__model.solve(log_output = "write_log" in solve_parameters and solve_parameters["write_log"])
 
-        if solve_status is None:
+        if self.solve_status is None:
             raise UnsolvableProblemException()
 
     def get_results_from_variables(self, variable_dict) -> pd.DataFrame:
@@ -242,3 +243,22 @@ class DocplexInterface(GenericInterface):
                 new_df.loc[:, column] = new_df[column].apply(lambda x:x.solution_value)
 
         return new_df
+
+    def get_result_objective(self) -> float:
+        """Returns the objective value of the solution.
+
+        Returns
+        -------
+        float
+            Solution objective value
+
+        Raises
+        ------
+        UnsolvedProblemException
+            The problem was not solved yet
+        """        
+        if self.solve_status is None:
+            raise UnsolvedProblemException
+
+        return self.__model.multi_objective_values[0]
+

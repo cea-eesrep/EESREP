@@ -28,6 +28,8 @@ class MIPInterface():
 
         self.__model = mip.Model(
             sense=self.__direction, solver_name=self.__solver)
+        
+        self.solve_status = None
 
     def get_new_continuous_variable(
         self,
@@ -204,8 +206,8 @@ class MIPInterface():
         solve_parameters : dict, optional
             Lists the interface solve options
         """
-        status = self.__model.optimize()
-        if not status in (
+        self.solve_status = self.__model.optimize()
+        if not self.solve_status in (
                 mip.OptimizationStatus.OPTIMAL,
                 mip.OptimizationStatus.FEASIBLE,
             ):
@@ -230,3 +232,22 @@ class MIPInterface():
                 new_df.loc[:, column] = new_df[column].apply(lambda y: y.x)
 
         return new_df
+        
+    def get_result_objective(self) -> float:
+        """Returns the objective value of the solution.
+
+        Returns
+        -------
+        float
+            Solution objective value
+
+        Raises
+        ------
+        UnsolvedProblemException
+            The problem was not solved yet
+        """        
+        if self.solve_status is None:
+            raise UnsolvedProblemException
+
+        return self.__model.objective_bound
+

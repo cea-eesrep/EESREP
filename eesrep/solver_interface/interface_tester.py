@@ -23,6 +23,8 @@ class InterfaceTester:
 
         self.test_unsolvable()
         self.test_discrete_vs_continuous()
+
+        self.test_objective_evaluation()
     
     def test_continuous_variable_list(self):
          interface:GenericInterface = self.interface_class()
@@ -176,3 +178,23 @@ class InterfaceTester:
 
         assert abs(float(interface.get_results_from_variables({"component":{"test":[var]}}).values) - 0.1) < 1e-5, "Discrete-continuous variable types are wrong."
         assert abs(float(interface.get_results_from_variables({"component":{"test":[var2]}}).values) - 5.) < 1e-5, "Discrete-continuous variable types are wrong."
+
+        
+    def test_objective_evaluation(self):
+        interface:GenericInterface = self.interface_class()
+
+        try:
+            interface.get_result_objective()
+            assert False, "Should not provide an objective without solution"
+        except UnsolvedProblemException:
+            pass
+
+        var = interface.get_new_continuous_variable("test", 0, 10)
+        var2 = interface.get_new_discrete_variable("test2", 0, 10)
+
+        interface.add_equality(interface.sum_variables([var + var2]), 5.1)
+        interface.set_objective(0.5*var+0.5*var2)
+
+        interface.solve()
+        assert interface.get_result_objective() == 0.5*5.1, "Wrong objective value given"
+        

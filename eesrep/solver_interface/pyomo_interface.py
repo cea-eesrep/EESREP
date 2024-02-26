@@ -4,6 +4,7 @@ import pandas as pd
 
 from pyomo.opt import SolverFactory
 import pyomo.environ as pyo
+from pyomo.environ import value
 from pyomo.core.base.var import ScalarVar
 from pyomo.core.expr.numeric_expr import LinearExpression
 from pyomo.opt import SolverStatus, TerminationCondition
@@ -36,6 +37,8 @@ class PyomoInterface(GenericInterface):
         self.__opt = SolverFactory(solver)
         self.__model = pyo.ConcreteModel()
         self.__model.constraints = pyo.ConstraintList()
+
+        self.solve_status = None
 
     def get_new_continuous_variable(
         self,
@@ -213,6 +216,7 @@ class PyomoInterface(GenericInterface):
         self.__results = self.__opt.solve(self.__model, options={"threads": threads}, tee = write_log)
 
         if (self.__results.solver.status == SolverStatus.ok) and (self.__results.solver.termination_condition == TerminationCondition.optimal):
+            self.solve_status = self.__results.solver.status
             pass
         elif (self.__results.solver.termination_condition == TerminationCondition.infeasible):
             import logging
@@ -251,3 +255,23 @@ class PyomoInterface(GenericInterface):
                 new_df.loc[:, column] = new_df[column].apply(lambda x:self.get_result(x))
 
         return new_df
+
+
+    def get_result_objective(self) -> float:
+        """Returns the objective value of the solution.
+
+        Returns
+        -------
+        float
+            Solution objective value
+
+        Raises
+        ------
+        UnsolvedProblemException
+            The problem was not solved yet
+        """        
+        if self.solve_status is None:
+            raise UnsolvedProblemException
+
+        return value(self.__model.objective)
+
