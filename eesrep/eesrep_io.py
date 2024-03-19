@@ -39,6 +39,7 @@ class ComponentIO:
         self.io_name:str = io_name
         self.type:TimeSerieType = io_type
         self.continuity:bool = io_continuity
+        self.submodel_name:str = None
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -51,3 +52,8 @@ class ComponentIO:
 
     def __ne__(self, other):
         return not self.__eq__(other)
+    
+    def get_submodel_version(self, submodel_name:str):
+        self.submodel_name = submodel_name
+
+        return self

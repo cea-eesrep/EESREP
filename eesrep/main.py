@@ -38,14 +38,14 @@ except ImportError:
 from .eesrep_enum import TimeSerieType
 
 
-class Eesrep:
+class Eesrep(GenericComponent):
     """
         ESREP model builder and solver class
     
     """
 
     #@profile
-    def __init__(self, direction:str = "Minimize", interface:str = "mip", solver:str = "CBC"):
+    def __init__(self, name = "", direction:str = "Minimize", interface:str = "mip", solver:str = "CBC"):
         """EESREP class constructor
 
         Parameters
@@ -57,6 +57,8 @@ class Eesrep:
         solver : str, optional
             Solver/Python module name to use, is interface at mip, we suggest using CBC or Gurobi, if docplex, solver is set at CPLEX, if Pyomo, see the module compatible solvers. Defaults to "CBC".
         """
+        self.name = name
+
         self.__solver: str = solver
         self.__interface: str = interface
         self.__direction: str = direction
@@ -91,6 +93,11 @@ class Eesrep:
         self.__solved_horizons: int = 0
         self.custom_steps: List[float] = []
         self.solve_parameters: dict = {}
+
+        self.__model_inputs: List[ComponentIO] = []
+        self.__model_outputs: List[ComponentIO] = []
+        self.__is_submodel = False
+        self.__submodels:Dict[str, Eesrep] = {}
 
         self._register_default_components()
 
@@ -399,7 +406,8 @@ class Eesrep:
         RuntimeError
             This function was called already.
         """
-        if not self.__time_range_defined:
+
+        if not self.__time_range_defined or self.__is_submodel:
             self.__time_range_defined = True
 
             self.time_step = time_step
@@ -462,7 +470,7 @@ class Eesrep:
         self.__time_series = self.__time_series.interpolate()
 
     #@profile
-    def create_bus(self, bus_type:str, options:dict):
+    def create_bus(self, bus_type:str, options:dict = {}):
         """Creates a bus in the model.
 
         Parameters
@@ -888,13 +896,18 @@ class Eesrep:
         self.__solved_horizons = 0
         self.__variables = {}
 
-        self.create_model_interface()
+        if not self.__is_submodel:
+            self.create_model_interface()
+        else:
+            self.__model = None
 
     #@profile
     def _init_time_step(self):
         """Creates the MILP model from its components definitions."""
         self.__reset()
 
+        old_results = None
+        
         if self.__steps_solved > 0:
             line_end = 0
 
@@ -903,39 +916,16 @@ class Eesrep:
 
             old_results = self.__results[:line_end+1]
 
-        for component in self.__components.values():
-            time_series = self.__get_time_serie_extract(component.name)
-
-            history = pd.DataFrame()
-
-            if self.__steps_solved > 0:
-                for time_serie in self.get_component_io(component.name):
-                    if self.get_component_io(component.name)[time_serie].continuity:
-                        if len(list(history.columns)) == 0:
-                            history["time"] = old_results["time"]
-
-                        history.loc[:, time_serie] = old_results[component.name+"_"+time_serie]
-
-            variables, objective = component.build_model(component.name,
-                                                            self.custom_steps,
-                                                            time_series,
-                                                            history,
-                                                            self.__model)
-
-            self.__variables[component.name] = variables
-            self.__objective = self.__model.sum_variables([self.__objective, objective])
-
-        for io_ in self.__objective_io_list:
-            objective = self.__model.sum_variables([io_[1]*var for var in self.__variables[io_[0].component_name][io_[0].io_name]])
-            self.__objective = self.__model.sum_variables([self.__objective, objective])
-
-        for link in self.__links:
-            self._create_link(link)
-
-        for bus in self.__buses.values():
-            self.__component_definition[bus["component_type"]]["definition"](bus)
+        self.__variables, self.__objective = self.build_model(
+                                                                self.name,
+                                                                self.custom_steps,
+                                                                None,
+                                                                old_results,
+                                                                self.__model
+                                                            )
 
         self.__model.set_objective(self.__objective)
+
 
     #@profile
     def _solve_time_step(self):
@@ -950,7 +940,7 @@ class Eesrep:
         self.__cumulated_objective += self.__model.get_result_objective()
 
     #@profile
-    def _create_link(self, link_properties:dict):
+    def _create_link(self, link_properties:dict, variables:Dict[str, Any], model_interface:GenericInterface):
         """Creates the constraints of a link between two components Input/Output.
 
         Parameters
@@ -969,11 +959,11 @@ class Eesrep:
             if self.__is_it_intensive(link_properties["component_name_2"], link_properties["io_2"]):
                 coeff_2 = self.custom_steps[i]
 
-            self.__model.add_equality((self.__variables[link_properties["component_name_1"]][link_properties["io_1"]][i]*link_properties["factor"] + link_properties["offset"])*coeff_1, \
-                self.__variables[link_properties["component_name_2"]][link_properties["io_2"]][i]*coeff_2)
+            model_interface.add_equality((variables[self.__component_prefix + link_properties["component_name_1"]][link_properties["io_1"]][i]*link_properties["factor"] + link_properties["offset"])*coeff_1, \
+                variables[self.__component_prefix + link_properties["component_name_2"]][link_properties["io_2"]][i]*coeff_2)
 
     #@profile
-    def _create_bus(self, bus_properties:dict):
+    def _create_bus(self, bus_properties:dict, variables:Dict[str, Any], model_interface:GenericInterface):
         """Creates the constraints of a bus.
 
         Parameters
@@ -986,10 +976,10 @@ class Eesrep:
             input_coeffs = [self.custom_steps[step] if self.__is_it_intensive(i[0], i[1]) is True else 1. for i in bus_properties["inputs"]]
             output_coeffs = [self.custom_steps[step] if self.__is_it_intensive(o[0], o[1]) is True else 1. for o in bus_properties["outputs"]]
 
-            inputs = [input_coeffs[i]*(self.__variables[bus_properties["inputs"][i][0]][bus_properties["inputs"][i][1]][step]*bus_properties["inputs"][i][2] + bus_properties["inputs"][i][3]) for i in range(len(bus_properties["inputs"]))]
-            outputs = [output_coeffs[i]*(self.__variables[bus_properties["outputs"][i][0]][bus_properties["outputs"][i][1]][step]*bus_properties["outputs"][i][2] + bus_properties["outputs"][i][3]) for i in range(len(bus_properties["outputs"]))]
+            inputs = [input_coeffs[i]*(variables[self.__component_prefix + bus_properties["inputs"][i][0]][bus_properties["inputs"][i][1]][step]*bus_properties["inputs"][i][2] + bus_properties["inputs"][i][3]) for i in range(len(bus_properties["inputs"]))]
+            outputs = [output_coeffs[i]*(variables[self.__component_prefix + bus_properties["outputs"][i][0]][bus_properties["outputs"][i][1]][step]*bus_properties["outputs"][i][2] + bus_properties["outputs"][i][3]) for i in range(len(bus_properties["outputs"]))]
 
-            self.__model.add_equality(self.__model.sum_variables(inputs), self.__model.sum_variables(outputs))
+            model_interface.add_equality(model_interface.sum_variables(inputs), model_interface.sum_variables(outputs))
 
     #@profile
     def _build_results(self):
@@ -1005,6 +995,173 @@ class Eesrep:
                 line_end += 1
 
             self.__results = pd.concat([self.__results[:line_end+1], new_df], ignore_index=True)
+
+
+
+
+    def add_model_output(self, output:ComponentIO):
+        """Adds a ComponentIO as model output.
+
+        Parameters
+        ----------
+        output : ComponentIO
+            ComponentIO to consider as model output.
+
+        Raises
+        ------
+        ComponentNameException
+            No added component with the io component name.
+        ComponentIOException
+            The component at this name does not have such Input/Output.
+        """
+        
+        component_name_1 = output.component_name
+
+        if not component_name_1 in self.__components:
+            raise ComponentNameException(component_name_1)
+
+        if not output.io_name in self.__components[component_name_1].io_from_parameters():
+            raise ComponentIOException(component_name_1, output.io_name)
+
+        self.__model_outputs.append(output)
+
+    def add_model_input(self, input:ComponentIO):
+        """Adds a ComponentIO as model input.
+
+        Parameters
+        ----------
+        input : ComponentIO
+            ComponentIO to consider as model input.
+
+        Raises
+        ------
+        ComponentNameException
+            No added component with the io component name.
+        ComponentIOException
+            The component at this name does not have such Input/Output.
+        """
+        
+        component_name_1 = input.component_name
+
+        if not component_name_1 in self.__components:
+            raise ComponentNameException(component_name_1)
+
+        if not input.io_name in self.__components[component_name_1].io_from_parameters():
+            raise ComponentIOException(component_name_1, input.io_name)
+
+        self.__model_inputs.append(input)
+    
+    def set_as_submodel(self):
+        self.__is_submodel = True
+        self.__reset()
+
+    def add_submodel(self, submodel):
+        if submodel.name == "":
+            raise ValueError("A submodel's name cannot be empty.")
+        if submodel.name in self.__submodels:
+            raise ValueError("A submodel with the same name is already registered.")
+        
+        submodel.set_as_submodel()
+
+        self.__submodels[submodel.name] = submodel
+
+    def io_from_parameters(self) -> Dict[str, ComponentIO]:
+        """Lists the component Input/Outputs.
+
+        Returns
+        -------
+        dict
+            Dictionnary listing the Input/Outputs and their respective ComponentIO objects
+
+        """
+        return {
+                    io.io_name:io for io in self.__model_inputs+self.__model_outputs
+                }
+
+    def build_model(self,
+        component_name:str,
+        time_steps:list,
+        time_series:pd.DataFrame,
+        history:pd.DataFrame,
+        model_interface:GenericInterface):
+        """Builds the model at the current horizon.
+
+        Parameters
+        ----------
+        component_name : str
+            Component name to index the MILP variables
+        time_steps : list
+            List of the time steps length 
+        time_series : pd.DataFrame
+            Dataframe containing the time series values at the current horizon time steps.
+        history : pd.DataFrame
+            Dataframe with the variables of previous iterations if "continuity" is at true.
+        model_interface : GenericInterface
+            Solver interface used to provide the variables
+        """
+        horizon_objective = 0.
+        horizon_variables = {}
+        
+        if component_name != "":
+            self.__component_prefix = component_name + "_"
+        else:
+            self.__component_prefix = ""
+
+        for submodel in self.__submodels.values():
+            component_history = pd.DataFrame()
+
+            submodel.define_time_range(self.time_step, self.time_shift, self.future_size, self.horizon_count)
+            submodel.set_custom_steps(self.custom_steps)
+            submodel.set_current_time(self.__current_time)
+
+            variables, objective = submodel.build_model(submodel.name,
+                                                            time_steps,
+                                                            time_series,
+                                                            component_history,
+                                                            model_interface)
+            for var in variables:
+                horizon_variables[var] = variables[var]
+            
+            horizon_objective = model_interface.sum_variables([horizon_objective, objective])
+        
+        for component in self.__components.values():
+            time_series = self.__get_time_serie_extract(component.name)
+
+            component_history = pd.DataFrame()
+
+            if self.__steps_solved > 0:
+                for time_serie in self.get_component_io(component.name):
+                    if self.get_component_io(component.name)[time_serie].continuity:
+                        if len(list(history.columns)) == 0:
+                            component_history["time"] = history["time"]
+
+                        component_history.loc[:, time_serie] = history[component.name+"_"+time_serie]
+
+            
+
+            variables, objective = component.build_model(self.__component_prefix + component.name,
+                                                            time_steps,
+                                                            time_series,
+                                                            component_history,
+                                                            model_interface)
+
+            horizon_variables[self.__component_prefix + component.name] = variables
+            horizon_objective = model_interface.sum_variables([horizon_objective, objective])
+
+        for io_ in self.__objective_io_list:
+            objective = model_interface.sum_variables([io_[1]*var for var in horizon_variables[self.__component_prefix + io_[0].component_name][io_[0].io_name]])
+            horizon_objective = model_interface.sum_variables([horizon_objective, objective])
+
+        for link in self.__links:
+            self._create_link(link, horizon_variables, model_interface)
+
+        for bus in self.__buses.values():
+            self.__component_definition[bus["component_type"]]["definition"](bus, horizon_variables, model_interface)
+
+        return horizon_variables, horizon_objective
+
+    def set_current_time(self, current_time:float):
+        self.__current_time = current_time
 
 if __name__ == "__main__":
     pass
