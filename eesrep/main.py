@@ -5,6 +5,8 @@ from typing import Any, Callable, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
+from eesrep.eesrep_bus import ComponentBUS
+
 from .components.generic_component import GenericComponent
 from .eesrep_exceptions import *
 from .solver_interface.generic_interface import GenericInterface
@@ -69,7 +71,7 @@ class Eesrep(GenericComponent):
 
         self.__components: Dict[str, GenericComponent] = {}
         self.__variables: Dict[str, Dict[str, Any]] = {}
-        self.__buses: Dict[str, Dict[str, List[str or float]]] = {}
+        self.__buses: Dict[str, ComponentBUS] = {}
         self.__results: pd.DataFrame = pd.DataFrame()
         self.__links: List[str, Any, str, Any , float, float] = []
 
@@ -470,15 +472,15 @@ class Eesrep(GenericComponent):
         self.__time_series = self.__time_series.interpolate()
 
     #@profile
-    def create_bus(self, bus_type:str, options:dict = {}):
+    def create_bus(self, bus_name:str, options:dict = {}) -> ComponentBUS:
         """Creates a bus in the model.
 
         Parameters
         ----------
-        bus_type : str
-            Bus type, 'bus' is the only valid value.
+        bus_name : str
+            Bus name.
         options : dict
-            Bus parameters, only requests the bus 'name'.
+            Bus parameters, no parameters implemented yet.
 
         Raises
         ------
@@ -487,31 +489,11 @@ class Eesrep(GenericComponent):
         ParametersException
             The provided parameters are not valid (prints every invalid value).
         """
-        if bus_type in self.__component_definition:
-            valid_component = True
+        if bus_name in self.__buses:
+            raise ComponentNameException(bus_name)
 
-            for param in self.__component_definition[bus_type]["parameters"]:
-                if param in options and isinstance(options[param],\
-                    self.__component_definition[bus_type]["parameters"][param]):
-                    pass
-                else:
-                    valid_component = False
-                    if not param in options:
-                        print(f"Parameter {param} is missing.")
-                    elif not isinstance(options[param],\
-                        self.__component_definition[bus_type]["parameters"][param]):
-                        print(f"Parameter {param} is of the wrong type, found {type(options[param])}")
-
-            if not valid_component:
-                raise ParametersException()
-
-            options["component_type"] = bus_type
-            options["inputs"] = []
-            options["outputs"] = []
-
-            self.__buses[options["name"]] = options
-        else:
-            raise BusTypeException(bus_type)
+        self.__buses[bus_name] = ComponentBUS(bus_name)
+        return self.__buses[bus_name]
 
     #@profile
     def add_link(self,
@@ -575,7 +557,7 @@ class Eesrep(GenericComponent):
     #@profile
     def plug_to_bus(self,
             io:ComponentIO,
-            bus_name:str,
+            bus:ComponentBUS,
             is_input:bool,
             factor:float,
             offset:float):
@@ -585,8 +567,8 @@ class Eesrep(GenericComponent):
         ----------
         io : str
             Input/output of the component.
-        bus_name : str
-            Name of the bus to which the Input/output is linked.
+        ComponentBUS : str
+            Bus to which the Input/output is linked.
         is_input : bool
             The Input/output is an input of the bus (drives the sign of the Inputs/Outputs).
         factor : float
@@ -603,21 +585,37 @@ class Eesrep(GenericComponent):
         ComponentIOException
             Given component does not have the given Input/output.
         """
-        component_name_1 = io.component_name
+        component_name = io.component_name
+        component_submodel = io.submodel_name
 
-        if not bus_name in self.__buses:
+        bus_name = bus.name
+        bus_submodel = bus.submodel_name
+
+        if bus_submodel is None and (not bus_name in self.__buses):
             raise BusNameException(bus_name)
+        elif bus_submodel is not None and bus_submodel not in self.__submodels:
+            raise SubmodelNameException(bus_submodel)
+        elif bus_submodel is not None and \
+                bus_submodel not in self.__submodels and\
+                bus_name not in self.__submodels[bus_submodel].get_bus_list(self.name):
+            raise BusNameException(bus_name, submodel=bus_submodel)
 
-        if not component_name_1 in self.__components:
-            raise ComponentNameException(component_name_1)
+        if component_submodel is None and not component_name in self.__components:
+            raise ComponentNameException(component_name)
+        elif component_submodel is not None and component_submodel not in self.__submodels:
+            raise SubmodelNameException(component_submodel)
+        elif component_submodel is not None and \
+                component_submodel not in self.__submodels and\
+                component_name not in self.__submodels[component_submodel].get_components():
+            raise ComponentNameException(component_name, submodel=component_submodel)
 
-        if not io.io_name in self.__components[component_name_1].io_from_parameters():
-            raise ComponentIOException(component_name_1, io.io_name)
+        if not io.io_name in self.__components[component_name].io_from_parameters():
+            raise ComponentIOException(component_name, io.io_name)
 
         if is_input:
-            self.__buses[bus_name]["inputs"].append([component_name_1, io.io_name, factor, offset])
+            self.__buses[bus_name].inputs.append([component_name, io.io_name, factor, offset])
         else:
-            self.__buses[bus_name]["outputs"].append([component_name_1, io.io_name, factor, offset])
+            self.__buses[bus_name].outputs.append([component_name, io.io_name, factor, offset])
 
     def add_io_to_objective(self, io:ComponentIO, price:float=0.):
         """Adds a component input/output to the objective at a given price
@@ -963,21 +961,21 @@ class Eesrep(GenericComponent):
                 variables[self.__component_prefix + link_properties["component_name_2"]][link_properties["io_2"]][i]*coeff_2)
 
     #@profile
-    def _create_bus(self, bus_properties:dict, variables:Dict[str, Any], model_interface:GenericInterface):
+    def _create_bus(self, bus:ComponentBUS, variables:Dict[str, Any], model_interface:GenericInterface):
         """Creates the constraints of a bus.
 
         Parameters
         ----------
-        bus_properties : dict
-            Bus properties provided while calling the create_bus function.
+        bus : ComponentBUS
+            Bus to create provided while calling the create_bus function.
         """
         for step in range(self.future_size):
 
-            input_coeffs = [self.custom_steps[step] if self.__is_it_intensive(i[0], i[1]) is True else 1. for i in bus_properties["inputs"]]
-            output_coeffs = [self.custom_steps[step] if self.__is_it_intensive(o[0], o[1]) is True else 1. for o in bus_properties["outputs"]]
+            input_coeffs = [self.custom_steps[step] if self.__is_it_intensive(i[0], i[1]) is True else 1. for i in bus.inputs]
+            output_coeffs = [self.custom_steps[step] if self.__is_it_intensive(o[0], o[1]) is True else 1. for o in bus.outputs]
 
-            inputs = [input_coeffs[i]*(variables[self.__component_prefix + bus_properties["inputs"][i][0]][bus_properties["inputs"][i][1]][step]*bus_properties["inputs"][i][2] + bus_properties["inputs"][i][3]) for i in range(len(bus_properties["inputs"]))]
-            outputs = [output_coeffs[i]*(variables[self.__component_prefix + bus_properties["outputs"][i][0]][bus_properties["outputs"][i][1]][step]*bus_properties["outputs"][i][2] + bus_properties["outputs"][i][3]) for i in range(len(bus_properties["outputs"]))]
+            inputs = [input_coeffs[i]*(variables[self.__component_prefix + bus.inputs[i][0]][bus.inputs[i][1]][step]*bus.inputs[i][2] + bus.inputs[i][3]) for i in range(len(bus.inputs))]
+            outputs = [output_coeffs[i]*(variables[self.__component_prefix + bus.outputs[i][0]][bus.outputs[i][1]][step]*bus.outputs[i][2] + bus.outputs[i][3]) for i in range(len(bus.outputs))]
 
             model_interface.add_equality(model_interface.sum_variables(inputs), model_interface.sum_variables(outputs))
 
@@ -1078,6 +1076,19 @@ class Eesrep(GenericComponent):
                     io.io_name:io for io in self.__model_inputs+self.__model_outputs
                 }
 
+    def get_bus_list(self) -> Dict[str, ComponentBUS]:
+        """Lists the component Input/Outputs.
+
+        Returns
+        -------
+        dict
+            Dictionnary listing the declared buses
+
+        """
+        return {
+                    bus_name:self.__buses[bus_name].get_submodel_version(self.name) for bus_name in self.__buses
+                }
+
     def build_model(self,
         component_name:str,
         time_steps:list,
@@ -1156,7 +1167,7 @@ class Eesrep(GenericComponent):
             self._create_link(link, horizon_variables, model_interface)
 
         for bus in self.__buses.values():
-            self.__component_definition[bus["component_type"]]["definition"](bus, horizon_variables, model_interface)
+            self._create_bus(bus, horizon_variables, model_interface)
 
         return horizon_variables, horizon_objective
 

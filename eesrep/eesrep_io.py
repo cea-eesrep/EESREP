@@ -54,6 +54,9 @@ class ComponentIO:
         return not self.__eq__(other)
     
     def get_submodel_version(self, submodel_name:str):
-        self.submodel_name = submodel_name
+        if submodel_name == "":
+            return self
+        else:
+            self.submodel_name = submodel_name
 
-        return self
+            return self

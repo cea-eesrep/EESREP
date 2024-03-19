@@ -4,8 +4,11 @@
 
 #   Component creation related errors
 class ComponentNameException(Exception):
-    def __init__(self, component_name:str):
-        super().__init__(f"No component named {component_name}.")
+    def __init__(self, component_name:str, submodel:str=""):
+        if submodel=="":
+            super().__init__(f"No component named {component_name}.")
+        else:
+            super().__init__(f"No component named {component_name} in submodel {submodel}.")
 
 class ComponentTypeException(Exception):
     def __init__(self, component_type:str):
@@ -16,8 +19,16 @@ class BusTypeException(Exception):
         super().__init__(f"No bus registered at the name {component_type}.")
 
 class BusNameException(Exception):
-    def __init__(self, component_type:str):
-        super().__init__(f"No bus named {component_type}.")
+    def __init__(self, bus_name:str, submodel:str=""):
+        if submodel=="":
+            super().__init__(f"No bus named {bus_name}.")
+        else:
+            super().__init__(f"No bus named {bus_name} in submodel {submodel}.")
+
+
+class SubmodelNameException(Exception):
+    def __init__(self, submodel_name:str):
+        super().__init__(f"No submodel named {submodel_name}.")
 
 class ParametersException(Exception):
     def __init__(self):
