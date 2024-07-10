@@ -1,5 +1,6 @@
 """EESREP model builder and solver module"""
 
+import inspect
 from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
@@ -91,6 +92,8 @@ class Eesrep:
         self.__solved_horizons: int = 0
         self.custom_steps: List[float] = []
         self.solve_parameters: dict = {}
+
+        self.__post_processing:Callable[[pd.DataFrame], pd.DataFrame] = None
 
         self._register_default_components()
 
@@ -944,9 +947,41 @@ class Eesrep:
 
     #@profile
     def _terminate_time_step(self):
-        """Terminates the current solved horizon and creates builds the results dataframe."""
+        """Terminates the current solved horizon and creates builds the results dataframe. If a post-processing function was provided, it is run afterward.
+
+        Raises
+        ------
+        PostProcessingException
+            Any exception occured during the post-processing.
+        PostProcessingException
+            The result dataframe length changed.
+        PostProcessingException
+            The result dataframe columns names changed.
+        """
         self.__steps_solved += 1
         self._build_results()
+
+        if self.__post_processing is not None:
+            print(f"Running provided post-processing function named {self.__post_processing.__name__}")
+            save_len_results:int = len(self.__results)
+
+            save_keys_results:List[str] = list(self.__results.keys())
+            save_keys_results.sort()
+
+            try:
+                self.__results = self.__post_processing(self.__results)
+            except Exception as e:
+                raise PostProcessingException(f"{type(e).__name__} – {e}")
+            
+            if len(self.__results) != save_len_results:
+                raise PostProcessingException(f"The number of lines in the result dataframe changed from {save_len_results} to {len(self.__results)}.")
+            
+            new_keys_results:List[str] = list(self.__results.keys())
+            new_keys_results.sort()
+
+            if new_keys_results != save_keys_results:
+                raise PostProcessingException(f"The result dataframe columns names changed during the post-processing.")
+            
         self.__cumulated_objective += self.__model.get_result_objective()
 
     #@profile
@@ -1005,6 +1040,33 @@ class Eesrep:
                 line_end += 1
 
             self.__results = pd.concat([self.__results[:line_end+1], new_df], ignore_index=True)
+
+    def set_post_processing(self, f:Callable) -> None:
+        """Sets a post porcessing function to be called at the end of every rolling horizon.
+
+        Parameters
+        ----------
+        f : Callable
+            Post-processing function
+
+        Raises
+        ------
+        RuntimeError
+            A function was already defined.
+        TypeError
+            The provided argument is not a callable function
+        AssertionError
+            The provided function does not have one argument.
+        """
+        if self.__post_processing is not None:
+            raise RuntimeError("Post-processing function already defined.")
+
+        if not callable(f):
+            raise TypeError(f"Input must be a callable, found {type(f)}")
+        
+        assert len(inspect.getfullargspec(f).args) == 1, "Post-processing function must have only one input, which must be a panda DataFrame."
+
+        self.__post_processing = f
 
 if __name__ == "__main__":
     pass

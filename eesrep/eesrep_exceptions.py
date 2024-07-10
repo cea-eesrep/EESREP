@@ -51,3 +51,11 @@ class UndefinedTimeRangeException(Exception):
 class UnsolvedProblemException(Exception):
     def __init__(self):
         super().__init__("The problem was not solved yet.")
+
+
+
+
+#   Post-processing related errors
+class PostProcessingException(Exception):
+    def __init__(self, e:str):
+        super().__init__(f"The post-processing returned the following error: {e}.")
