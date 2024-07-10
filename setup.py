@@ -9,7 +9,7 @@ from setuptools import find_packages, setup
 # python3 -m twine upload --repository pypi dist/*
 
 extra_require_37 = [
-            "setuptools<=68.2.2",
+            "setuptools<=68.0.0",
             'sphinx',
             'sphinx_rtd_theme',
             'myst_parser',
