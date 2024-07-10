@@ -29,7 +29,7 @@ EESREP is a research tool developed at CEA (DES/ISAS/DM2S/SERMA).
 
 ##   Install
 
-EESREP works on python3 (tested between 3.6 and 3.11) and can be installed using the command:
+EESREP works on python3 (tested at versions 3.6 and between 3.6 and 3.11) and can be installed using the command:
 
 ```
 python -m pip install eesrep
