@@ -1,7 +1,5 @@
-[tool.pdm.dev-dependencies]
-setuptools = { version = "*", python = ">=3.8" }
-setuptools = { version = "<=68.0.0", python = "<=3.7" }
-
 [build-system]
-requires = ["setuptools"]
+requires = [
+    'setuptools',
+]
 build-backend = "setuptools.build_meta"
