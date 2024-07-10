@@ -8,42 +8,6 @@ from setuptools import find_packages, setup
 # python3 -m build
 # python3 -m twine upload --repository pypi dist/*
 
-extra_require_37 = [
-            'sphinx',
-            'sphinx_rtd_theme',
-            'myst_parser',
-            'numpydoc',
-            'nbsphinx',
-            'ipython',
-            'jupyter',
-            'docplex',
-            'cplex',
-            'mip',
-            'pyomo',
-            'pandoc'
-        ]
-
-extra_require_default = [
-            'sphinx',
-            'sphinx_rtd_theme',
-            'myst_parser',
-            'numpydoc',
-            'nbsphinx',
-            'ipython',
-            'jupyter',
-            'docplex',
-            'cplex',
-            'mip',
-            'pyomo',
-            'pandoc'
-        ]
-
-print(sys.version_info)
-
-if sys.version_info[0] == 3 and sys.version_info[1] == 7:
-    extra_require = extra_require_37
-else:
-    extra_require = extra_require_default
 
 setup(
     name='eesrep',
@@ -72,7 +36,19 @@ setup(
         "Source": "https://github.com/tmoulignier/EESREP",
         },
     extras_require={
-        'docs-requirements-txt': extra_require,
-        'docplex': ['setuptools<=68.0.0']
+        'docs-requirements-txt': [
+            'sphinx',
+            'sphinx_rtd_theme',
+            'myst_parser',
+            'numpydoc',
+            'nbsphinx',
+            'ipython',
+            'jupyter',
+            'docplex',
+            'cplex',
+            'mip',
+            'pyomo',
+            'pandoc'
+        ]
     }
 )
