@@ -16,8 +16,8 @@ extra_require_37 = [
             'nbsphinx',
             'ipython',
             'jupyter',
-            'docplex<=2.25.236',
-            'cplex',
+            'docplex',
+            'cplex=22.1.1.0',
             'mip',
             'pyomo',
             'pandoc'
@@ -37,6 +37,8 @@ extra_require_default = [
             'pyomo',
             'pandoc'
         ]
+
+print(sys.version_info)
 
 if sys.version_info[0] == 3 and sys.version_info[1] == 7:
     extra_require = extra_require_37
