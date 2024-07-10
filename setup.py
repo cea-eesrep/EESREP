@@ -28,8 +28,7 @@ setup(
     install_requires=[
         "pandas", 
         "numpy",
-        "matplotlib",
-        'setuptools<=68.0.0'],
+        "matplotlib"],
     project_urls={  # Optional
         "Bug Reports": "https://github.com/tmoulignier/EESREP/issues",
         "Doc": "https://eesrep.readthedocs.io/en/latest//index.html",
@@ -37,7 +36,8 @@ setup(
         },
     extras_require={
         'docs-requirements-txt': [
-            'sphinx',
+            'sphinx', 
+            "numpy<2",
             'sphinx_rtd_theme',
             'myst_parser',
             'numpydoc',
