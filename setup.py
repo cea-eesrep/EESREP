@@ -35,7 +35,7 @@ setup(
         },
     extras_require={
         'docs-requirements-txt': [
-            ("setuptools", "<=68.2.2" if sys.version_info[0] == 3 and sys.version_info[1] == 7 else '>= 0.'),
+            "setuptools" + "<=68.2.2" if sys.version_info[0] == 3 and sys.version_info[1] == 7 else "setuptools" + '>= 0.',
             'sphinx',
             'sphinx_rtd_theme',
             'myst_parser',
