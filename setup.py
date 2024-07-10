@@ -17,7 +17,7 @@ extra_require_37 = [
             'ipython',
             'jupyter',
             'docplex',
-            'cplex=22.1.1.0',
+            'cplex==22.1.1.0',
             'mip',
             'pyomo',
             'pandoc'
