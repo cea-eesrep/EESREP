@@ -17,7 +17,7 @@ extra_require_37 = [
             'ipython',
             'jupyter',
             'docplex',
-            'cplex==22.1.1.0',
+            'cplex',
             'mip',
             'pyomo',
             'pandoc'
@@ -71,6 +71,7 @@ setup(
         "Source": "https://github.com/tmoulignier/EESREP",
         },
     extras_require={
-        'docs-requirements-txt': extra_require
+        'docs-requirements-txt': extra_require,
+        'docplex': ['setuptools<=68.0.0']
     }
 )
