@@ -64,7 +64,8 @@ setup(
     install_requires=[
         "pandas", 
         "numpy",
-        "matplotlib"],
+        "matplotlib",
+        'setuptools<=68.0.0'],
     project_urls={  # Optional
         "Bug Reports": "https://github.com/tmoulignier/EESREP/issues",
         "Doc": "https://eesrep.readthedocs.io/en/latest//index.html",
