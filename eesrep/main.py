@@ -3,6 +3,7 @@
 import inspect
 from typing import Any, Callable, Dict, List, Tuple
 
+from eesrep.components.bus import GenericBus
 import numpy as np
 import pandas as pd
 
@@ -38,11 +39,9 @@ except ImportError:
 
 from .eesrep_enum import TimeSerieType
 
-
 class Eesrep:
     """
         ESREP model builder and solver class
-    
     """
 
     #@profile
@@ -68,7 +67,7 @@ class Eesrep:
 
         self.__components: Dict[str, GenericComponent] = {}
         self.__variables: Dict[str, Dict[str, Any]] = {}
-        self.__buses: Dict[str, Dict[str, List[str or float]]] = {}
+        self.__buses: Dict[str, GenericBus] = {}
         self.__results: pd.DataFrame = pd.DataFrame()
         self.__links: List[str, Any, str, Any , float, float] = []
 
@@ -94,8 +93,6 @@ class Eesrep:
         self.solve_parameters: dict = {}
 
         self.__post_processing:Callable[[pd.DataFrame], pd.DataFrame] = None
-
-        self._register_default_components()
 
     #@profile
     def create_model_interface(self):
@@ -152,22 +149,6 @@ class Eesrep:
         self.__interface = interface_name
 
     #@profile
-    def _register_default_components(self):
-        """Function that registers the built-in components.
-
-        The bus component is defined here as it has a different behavior than other components.
-        """
-        self.__component_definition["bus"]={
-                                                "parameters":{
-                                                                "name":str,
-                                                             },
-                                                "variables":{},
-                                                "time_series":
-                                                            {},
-                                                "definition":self._create_bus
-                                            }
-
-    #@profile
     def add_component(self, component:GenericComponent):
         """Adds a component to the model.
 
@@ -203,8 +184,12 @@ class Eesrep:
         except AttributeError:
             raise AttributeError("Provided component does not have a 'name' attribute.")
 
-        if name in self.__components:
-            raise ValueError(f"Component {name} already exists.")
+        if isinstance(component, GenericBus):
+            if name in self.__buses:
+                raise ValueError(f"Bus {name} already exists.")
+        else:
+            if name in self.__components:
+                raise ValueError(f"Component {name} already exists.")
 
         time_series = component.get_time_series()
 
@@ -242,7 +227,10 @@ class Eesrep:
         if "-" in name:
             print("/!\\ Dash caracter present in the component name, please replace to underscore /!\\")
 
-        self.__components[name] = component
+        if isinstance(component, GenericBus):
+            self.__buses[name] = component
+        else:
+            self.__components[name] = component
         
         for time_serie in time_series:
             self.__add_time_serie(name+"_"+time_serie, self.__components[name].time_series[time_serie]["value"])
@@ -465,50 +453,6 @@ class Eesrep:
         self.__time_series = self.__time_series.interpolate()
 
     #@profile
-    def create_bus(self, bus_type:str, options:dict):
-        """Creates a bus in the model.
-
-        Parameters
-        ----------
-        bus_type : str
-            Bus type, 'bus' is the only valid value.
-        options : dict
-            Bus parameters, only requests the bus 'name'.
-
-        Raises
-        ------
-        BusTypeException
-            The provided bus type is not registered.
-        ParametersException
-            The provided parameters are not valid (prints every invalid value).
-        """
-        if bus_type in self.__component_definition:
-            valid_component = True
-
-            for param in self.__component_definition[bus_type]["parameters"]:
-                if param in options and isinstance(options[param],\
-                    self.__component_definition[bus_type]["parameters"][param]):
-                    pass
-                else:
-                    valid_component = False
-                    if not param in options:
-                        print(f"Parameter {param} is missing.")
-                    elif not isinstance(options[param],\
-                        self.__component_definition[bus_type]["parameters"][param]):
-                        print(f"Parameter {param} is of the wrong type, found {type(options[param])}")
-
-            if not valid_component:
-                raise ParametersException()
-
-            options["component_type"] = bus_type
-            options["inputs"] = []
-            options["outputs"] = []
-
-            self.__buses[options["name"]] = options
-        else:
-            raise BusTypeException(bus_type)
-
-    #@profile
     def add_link(self,
         io_1:ComponentIO,
         io_2:ComponentIO,
@@ -570,8 +514,7 @@ class Eesrep:
     #@profile
     def plug_to_bus(self,
             io:ComponentIO,
-            bus_name:str,
-            is_input:bool,
+            bus_io:ComponentIO,
             factor:float,
             offset:float):
         """Connects a component Input/output to a bus.
@@ -580,10 +523,8 @@ class Eesrep:
         ----------
         io : str
             Input/output of the component.
-        bus_name : str
-            Name of the bus to which the Input/output is linked.
-        is_input : bool
-            The Input/output is an input of the bus (drives the sign of the Inputs/Outputs).
+        io : str
+            Input/output of the bus to plug to.
         factor : float
             Input/output multiply factor.
         offset : float
@@ -599,6 +540,7 @@ class Eesrep:
             Given component does not have the given Input/output.
         """
         component_name_1 = io.component_name
+        bus_name = bus_io.component_name
 
         if not bus_name in self.__buses:
             raise BusNameException(bus_name)
@@ -609,10 +551,10 @@ class Eesrep:
         if not io.io_name in self.__components[component_name_1].io_from_parameters():
             raise ComponentIOException(component_name_1, io.io_name)
 
-        if is_input:
-            self.__buses[bus_name]["inputs"].append([component_name_1, io.io_name, factor, offset])
+        if bus_io.io_name == "input":
+            self.__buses[bus_name].inputs.append([io, factor, offset])
         else:
-            self.__buses[bus_name]["outputs"].append([component_name_1, io.io_name, factor, offset])
+            self.__buses[bus_name].outputs.append([io, factor, offset])
 
     def add_io_to_objective(self, io:ComponentIO, price:float=0.):
         """Adds a component input/output to the objective at a given price
@@ -936,7 +878,7 @@ class Eesrep:
             self._create_link(link)
 
         for bus in self.__buses.values():
-            self.__component_definition[bus["component_type"]]["definition"](bus)
+            self._create_bus(bus)
 
         self.__model.set_objective(self.__objective)
 
@@ -1008,7 +950,7 @@ class Eesrep:
                 self.__variables[link_properties["component_name_2"]][link_properties["io_2"]][i]*coeff_2)
 
     #@profile
-    def _create_bus(self, bus_properties:dict):
+    def _create_bus(self, bus:GenericBus):
         """Creates the constraints of a bus.
 
         Parameters
@@ -1018,11 +960,11 @@ class Eesrep:
         """
         for step in range(self.future_size):
 
-            input_coeffs = [self.custom_steps[step] if self.__is_it_intensive(i[0], i[1]) is True else 1. for i in bus_properties["inputs"]]
-            output_coeffs = [self.custom_steps[step] if self.__is_it_intensive(o[0], o[1]) is True else 1. for o in bus_properties["outputs"]]
+            input_coeffs = [self.custom_steps[step] if self.__is_it_intensive(i[0].component_name, i[0].io_name) else 1. for i in bus.inputs]
+            output_coeffs = [self.custom_steps[step] if self.__is_it_intensive(o[0].component_name, o[0].io_name) else 1. for o in bus.outputs]
 
-            inputs = [input_coeffs[i]*(self.__variables[bus_properties["inputs"][i][0]][bus_properties["inputs"][i][1]][step]*bus_properties["inputs"][i][2] + bus_properties["inputs"][i][3]) for i in range(len(bus_properties["inputs"]))]
-            outputs = [output_coeffs[i]*(self.__variables[bus_properties["outputs"][i][0]][bus_properties["outputs"][i][1]][step]*bus_properties["outputs"][i][2] + bus_properties["outputs"][i][3]) for i in range(len(bus_properties["outputs"]))]
+            inputs = [input_coeffs[i]*(self.__variables[bus.inputs[i][0].component_name][bus.inputs[i][0].io_name][step]*bus.inputs[i][1] + bus.inputs[i][2]) for i in range(len(bus.inputs))]
+            outputs = [output_coeffs[i]*(self.__variables[bus.outputs[i][0].component_name][bus.outputs[i][0].io_name][step]*bus.outputs[i][1] + bus.outputs[i][2]) for i in range(len(bus.outputs))]
 
             self.__model.add_equality(self.__model.sum_variables(inputs), self.__model.sum_variables(outputs))
 

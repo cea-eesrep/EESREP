@@ -1,6 +1,7 @@
 import pandas as pd
 
 import eesrep
+from eesrep.components.bus import GenericBus
 from eesrep.components.converter import Cluster, Converter
 from eesrep.components.sink_source import FatalSink, FatalSource, Sink, Source
 from eesrep.components.storage import GenericStorage
@@ -36,9 +37,7 @@ data = pd.read_csv("AEN_timeseries.csv", sep=";")
 
 model = eesrep.Eesrep(solver="DOCPLEX")
 
-model.create_bus("bus", {
-                            "name":"Zone_1"
-                        })
+Zone_1 = GenericBus("Zone_1")
 
 Load_1 = FatalSink(name="Load_1",
                                 sink_flow=data[["Time", "Load_1"]].rename(columns={"Time":"time", "Load_1":"value"}))
@@ -102,9 +101,7 @@ Nuclear_1_2 = Cluster(name="Nuclear_1_2",
                                     duration_off=24,
                                     turn_on_price=500000.)
 
-model.create_bus("bus", {
-                            "name":"Zone_2"
-                        })
+Zone_2 = GenericBus("Zone_2")
 
 Load_2 = FatalSink(name="Load_2",
                             sink_flow=data[["Time", "Load_2"]].rename(columns={"Time":"time", "Load_2":"value"}))
@@ -193,15 +190,9 @@ transfert_2_1 = Converter(name="transfert_2_1",
                                 p_max=1000000.,
                                 efficiency=1.)
 
-model.create_bus("bus", {
-                            "name":"CCGT_bus"
-                        })
-model.create_bus("bus", {
-                            "name":"Nuclear_bus"
-                        })
-model.create_bus("bus", {
-                            "name":"OCGT_bus"
-                        })
+CCGT_bus = GenericBus("CCGT_bus")
+Nuclear_bus = GenericBus("Nuclear_bus")
+OCGT_bus = GenericBus("OCGT_bus")
 
 Nuclear_fuel = Source(name="Nuclear_fuel",
                             p_min=0.,
@@ -249,31 +240,37 @@ for c in [Nuclear_fuel,
             Storage_2,
 
             transfert_1_2,
-            transfert_2_1]:
+            transfert_2_1,
+            
+            Zone_1, 
+            Zone_2, 
+            CCGT_bus, 
+            OCGT_bus, 
+            Nuclear_bus]:
     model.add_component(c)
 
 #   Plugging fuels inputs
-model.plug_to_bus(Nuclear_fuel.power_out, "Nuclear_bus", True, 1., 0.)
-model.plug_to_bus(CCGT_fuel.power_out, "CCGT_bus", True, 1., 0.)
-model.plug_to_bus(OCGT_fuel.power_out, "OCGT_bus", True, 1., 0.)
+model.plug_to_bus(Nuclear_fuel.power_out, Nuclear_bus.input, 1., 0.)
+model.plug_to_bus(CCGT_fuel.power_out, CCGT_bus.input, 1., 0.)
+model.plug_to_bus(OCGT_fuel.power_out, OCGT_bus.input, 1., 0.)
 
-model.plug_to_bus(Nuclear_1.power_in, "Nuclear_bus", False, 1., 0.)
-model.plug_to_bus(Nuclear_1_2.power_in, "Nuclear_bus", False, 1., 0.)
-model.plug_to_bus(Nuclear_2.power_in, "Nuclear_bus", False, 1., 0.)
-model.plug_to_bus(Nuclear_2_2.power_in, "Nuclear_bus", False, 1., 0.)
+model.plug_to_bus(Nuclear_1.power_in, Nuclear_bus.output, 1., 0.)
+model.plug_to_bus(Nuclear_1_2.power_in, Nuclear_bus.output, 1., 0.)
+model.plug_to_bus(Nuclear_2.power_in, Nuclear_bus.output, 1., 0.)
+model.plug_to_bus(Nuclear_2_2.power_in, Nuclear_bus.output, 1., 0.)
 
-model.plug_to_bus(CCGT_1.power_in, "CCGT_bus", False, 1., 0.)
-model.plug_to_bus(CCGT_2.power_in, "CCGT_bus", False, 1., 0.)
-model.plug_to_bus(CCGT_2_2.power_in, "CCGT_bus", False, 1., 0.)
+model.plug_to_bus(CCGT_1.power_in, CCGT_bus.output, 1., 0.)
+model.plug_to_bus(CCGT_2.power_in, CCGT_bus.output, 1., 0.)
+model.plug_to_bus(CCGT_2_2.power_in, CCGT_bus.output, 1., 0.)
 
-model.plug_to_bus(OCGT_1.power_in, "OCGT_bus", False, 1., 0.)
-model.plug_to_bus(OCGT_2.power_in, "OCGT_bus", False, 1., 0.)
-model.plug_to_bus(OCGT_2_2.power_in, "OCGT_bus", False, 1., 0.)
+model.plug_to_bus(OCGT_1.power_in, OCGT_bus.output, 1., 0.)
+model.plug_to_bus(OCGT_2.power_in, OCGT_bus.output, 1., 0.)
+model.plug_to_bus(OCGT_2_2.power_in, OCGT_bus.output, 1., 0.)
 
 
 #   Zone 1
 for component in [Load_1, Poubelle_1]:
-    model.plug_to_bus(component.power_in, "Zone_1", False, 1., 0.)
+    model.plug_to_bus(component.power_in, Zone_1.output, 1., 0.)
 
 for component in [Reseau_1,
                 Solar_1,
@@ -283,13 +280,13 @@ for component in [Reseau_1,
                 CCGT_1,
                 Nuclear_1,
                 Nuclear_1_2]:
-    model.plug_to_bus(component.power_out, "Zone_1", True, 1., 0.)
+    model.plug_to_bus(component.power_out, Zone_1.input, 1., 0.)
 
-model.plug_to_bus(Storage_1.flow, "Zone_1", False, 1., 0.)
+model.plug_to_bus(Storage_1.flow, Zone_1.output, 1., 0.)
 
 #   Zone 2
 for component in [Load_2, Poubelle_2]:
-    model.plug_to_bus(component.power_in, "Zone_2", False, 1., 0.)
+    model.plug_to_bus(component.power_in, Zone_2.output, 1., 0.)
 
 for component in [Reseau_2,
                 Solar_2,
@@ -301,16 +298,16 @@ for component in [Reseau_2,
                 CCGT_2_2,
                 Nuclear_2,
                 Nuclear_2_2]:
-    model.plug_to_bus(component.power_out, "Zone_2", True, 1., 0.)
+    model.plug_to_bus(component.power_out, Zone_2.input, 1., 0.)
 
-model.plug_to_bus(Storage_2.flow, "Zone_2", False, 1., 0.)
+model.plug_to_bus(Storage_2.flow, Zone_2.output, 1., 0.)
 
 #   Transfers
-model.plug_to_bus(transfert_1_2.power_in, "Zone_1", False, 1., 0.)
-model.plug_to_bus(transfert_1_2.power_out, "Zone_2", True, 1., 0.)
+model.plug_to_bus(transfert_1_2.power_in, Zone_1.output, 1., 0.)
+model.plug_to_bus(transfert_1_2.power_out, Zone_2.input, 1., 0.)
 
-model.plug_to_bus(transfert_2_1.power_in, "Zone_2", False, 1., 0.)
-model.plug_to_bus(transfert_2_1.power_out, "Zone_1", True, 1., 0.)
+model.plug_to_bus(transfert_2_1.power_in, Zone_2.output, 1., 0.)
+model.plug_to_bus(transfert_2_1.power_out, Zone_1.input, 1., 0.)
 
 
 

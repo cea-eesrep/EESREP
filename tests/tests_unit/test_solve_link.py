@@ -1,6 +1,7 @@
 
 from os import environ
 
+from eesrep.components.bus import GenericBus
 import numpy as np
 import pandas as pd
 from eesrep.eesrep_io import ComponentIO
@@ -28,17 +29,19 @@ def make_basic_model(model:eesrep.Eesrep, coeff:float, offset:float):
 def make_basic_model_with_bus(model:eesrep.Eesrep, revert:bool, coeff:float, offset:float):
     source = Source("source", -100., 100., 1.)
     model.add_component(source)
-    model.create_bus("bus", {"name":"bus"})
+
+    bus = GenericBus("bus")
+    model.add_component(bus)
 
     load = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
     model.add_component(load)
     
     if revert:
-        model.plug_to_bus(source.power_out, "bus", True, 1., 0.)
-        model.plug_to_bus(load.power_in, "bus", True, coeff, offset)
+        model.plug_to_bus(source.power_out, bus.input, 1., 0.)
+        model.plug_to_bus(load.power_in, bus.input, coeff, offset)
     else:
-        model.plug_to_bus(source.power_out, "bus", False, 1., 0.)
-        model.plug_to_bus(load.power_in, "bus", True, coeff, offset)
+        model.plug_to_bus(source.power_out, bus.output, 1., 0.)
+        model.plug_to_bus(load.power_in, bus.input, coeff, offset)
 
 
 @pytest.mark.Unit
@@ -409,14 +412,15 @@ def test_add_io_to_objective():
     model.add_component(source_1)
     model.add_component(source_2)
 
-    model.create_bus("bus", {"name":"bus"})
+    bus = GenericBus("bus")
+    model.add_component(bus)
 
     load = FatalSink("load", pd.DataFrame({"time":[0,1,2,3,4,5], "value":[0,1,2,3,4,5]}))
     model.add_component(load)
     
-    model.plug_to_bus(source_1.power_out, "bus", True, 1., 0.)
-    model.plug_to_bus(source_2.power_out, "bus", True, 1., 0.)
-    model.plug_to_bus(load.power_in, "bus", False, 1., 0.)
+    model.plug_to_bus(source_1.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(source_2.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(load.power_in, bus.output, 1., 0.)
 
     model.add_io_to_objective(source_1.power_out, price=50.)
     model.define_time_range(1., 1, 5, 1)

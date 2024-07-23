@@ -3,63 +3,98 @@ from os import environ
 import pytest
 
 import eesrep
-from eesrep.eesrep_exceptions import BusTypeException, ParametersException
+from eesrep.eesrep_exceptions import BusNameException, BusTypeException, ComponentNameException, ParametersException
 from eesrep.test_interface_solver import get_couple_from_key
+from eesrep.components.bus import GenericBus
+from eesrep.components.tool import LowerThan
 
 solver_for_tests, interface_for_tests = get_couple_from_key()
 
 @pytest.mark.Unit
 @pytest.mark.bus
-def test_wrong_bus_type():
+def test_plug_bus_wrong_type():
     """
-        Tests if the cluster starts the right amount of machines
+        Tests if the bus plugged to is actually a genericBus
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    component_1 = LowerThan("component_1", 0.)
+    component_not_a_bus = LowerThan("component_not_a_bus", 0.)
     
+    model.add_component(component_1)
+    model.add_component(component_not_a_bus)
+
     try:
-        model.create_bus("wrong_bus", {})
-        assert False, "Bus name does not exist"
-    except BusTypeException:
+        model.plug_to_bus(component_1.power_in, component_not_a_bus.power_in, 1., 0.)
+        assert False, "component_not_a_bus is not in the bus list"
+    except BusNameException:
+        assert True
+
+@pytest.mark.Unit
+@pytest.mark.bus
+def test_unknown_component():
+    """
+        Tests if the bus plugged to is actually a genericBus
+    """
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    component_1 = LowerThan("component_1", 0.)
+    component_bus = GenericBus("component_bus")
+    
+    model.add_component(component_bus)
+
+    try:
+        model.plug_to_bus(component_1.power_in, component_bus.input, 1., 0.)
+        assert False, "component_1 is not declared"
+    except ComponentNameException:
+        assert True
+
+@pytest.mark.Unit
+@pytest.mark.bus
+def test_unknown_bus():
+    """
+        Tests if the bus plugged to is actually a genericBus
+    """
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    component_1 = LowerThan("component_1", 0.)
+    component_bus = GenericBus("component_bus")
+    
+    model.add_component(component_1)
+
+    try:
+        model.plug_to_bus(component_1.power_in, component_bus.input, 1., 0.)
+        assert False, "component_bus is not declared"
+    except BusNameException:
         assert True
         
 @pytest.mark.Unit
 @pytest.mark.bus
-def test_wrong_bus_name():
+def test_bus_added_as_input():
     """
-        Tests if the cluster starts the right amount of machines
+        Tests if the bus plugged to is actually a genericBus
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    component_1 = LowerThan("component_1", 0.)
+    component_bus = GenericBus("component_bus")
     
-    try:
-        model.create_bus("bus", {})
-        assert False, "Bus name does not exist"
-    except ParametersException:
-        assert True
+    model.add_component(component_1)
+    model.add_component(component_bus)
+
+    model.plug_to_bus(component_1.power_in, component_bus.input, 1., 0.)
+    assert [component_1.power_in, 1., 0.] in model._Eesrep__buses[component_bus.name].inputs, "component_1.power_in is not in component_bus inputs."
+
 
 @pytest.mark.Unit
 @pytest.mark.bus
-def test_wrong_bus_argument_type():
+def test_bus_added_as_output():
     """
-        Tests if the cluster starts the right amount of machines
-    """
-    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
-    
-    try:
-        model.create_bus("bus", {"name":2})
-        assert False, "Bus name does not exist"
-    except ParametersException:
-        assert True
-        
-
-@pytest.mark.Unit
-@pytest.mark.bus
-def test_bus_dict():
-    """
-        Tests if the cluster starts the right amount of machines
+        Tests if the bus plugged to is actually a genericBus
     """
     model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    component_1 = LowerThan("component_1", 0.)
+    component_bus = GenericBus("component_bus")
     
-    model.create_bus("bus", {"name":"the_bus"})
+    model.add_component(component_1)
+    model.add_component(component_bus)
 
-    assert isinstance(model._Eesrep__buses["the_bus"], dict)
-    assert list(model._Eesrep__buses["the_bus"].keys()) == ["name", "component_type", "inputs", "outputs"]
+    model.plug_to_bus(component_1.power_in, component_bus.output, 1., 0.)
+    assert [component_1.power_in, 1., 0.] in model._Eesrep__buses[component_bus.name].outputs, "component_1.power_in is not in component_bus inputs."
+

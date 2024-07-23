@@ -1,5 +1,6 @@
 from os import environ, path
 
+from eesrep.components.bus import GenericBus
 import numpy as np
 import pandas as pd
 import pytest
@@ -31,16 +32,15 @@ def test_tool_delayer():
     model.add_component(delayer)
     model.add_component(fatal_sink)
 
-    model.create_bus("bus", {
-                                "name":"bus"
-                            })
+    bus = GenericBus("bus")
+    model.add_component(bus)
 
     model.add_link(source.power_out, delayer.power_in, 1., 0.)
 
-    model.plug_to_bus(delayer.power_out, "bus", True, 1., 0.)
-    model.plug_to_bus(source2.power_out, "bus", True, 1., 0.)
-    model.plug_to_bus(sink.power_in, "bus", False, 1., 0.)
-    model.plug_to_bus(fatal_sink.power_in, "bus", False, 1., 0.)
+    model.plug_to_bus(delayer.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(source2.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(sink.power_in, bus.output, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, bus.output, 1., 0.)
 
     model.define_time_range(1., 15, 15, 2)
     model.solve()
@@ -90,9 +90,8 @@ def test_tool_greater_than():
     """
     model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.create_bus("bus", {
-                                "name":"bus_1"
-                            })
+    bus = GenericBus("bus")
+    model.add_component(bus)
 
     source = Source("source", 0., 10000., 1.)
     sink = Sink("sink", 0., 10000., 0.01)
@@ -104,9 +103,9 @@ def test_tool_greater_than():
     model.add_component(greater_than)
     model.add_component(fatal_sink_1)
     
-    model.plug_to_bus(source.power_out, "bus_1", True, 1., 0.)
-    model.plug_to_bus(fatal_sink_1.power_in, "bus_1", False, 1., 0.)
-    model.plug_to_bus(sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(source.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(fatal_sink_1.power_in, bus.output, 1., 0.)
+    model.plug_to_bus(sink.power_in, bus.output, 1., 0.)
     
     model.add_link(source.power_out, greater_than.power_in, 1., 0.)
 
@@ -128,9 +127,8 @@ def test_tool_lower_than():
     """
     model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.create_bus("bus", {
-                                "name":"bus_1"
-                            })
+    bus = GenericBus("bus")
+    model.add_component(bus)
 
     source = Source("source", 0., 10000., 1.)
 
@@ -148,10 +146,10 @@ def test_tool_lower_than():
     model.add_component(lower_than)
     model.add_component(fatal_sink_1)
     
-    model.plug_to_bus(source.power_out, "bus_1", True, 1., 0.)
-    model.plug_to_bus(back_up.power_out, "bus_1", True, 1., 0.)
-    model.plug_to_bus(fatal_sink_1.power_in, "bus_1", False, 1., 0.)
-    model.plug_to_bus(sink.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(source.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(back_up.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(fatal_sink_1.power_in, bus.output, 1., 0.)
+    model.plug_to_bus(sink.power_in, bus.output, 1., 0.)
     
     model.add_link(source.power_out, lower_than.power_in, 1., 0.)
 

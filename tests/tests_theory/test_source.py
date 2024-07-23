@@ -1,5 +1,6 @@
 from os import environ, path
 
+from eesrep.components.bus import GenericBus
 import numpy as np
 import pandas as pd
 import pytest
@@ -19,9 +20,8 @@ def test_G_001_production_price():
     reference_data = pd.read_csv(path.join(app_home, "DataSeries", "G_001_dataseries.csv"), sep=";")
     model = Eesrep(solver=solver_for_tests, interface=interface_for_tests)
 
-    model.create_bus("bus", {
-                                "name":"bus_1"
-                            })
+    bus = GenericBus("bus")
+    model.add_component(bus)
 
     oil = Source("oil", 0., 100., 5.)
     gas = Source("gas", 0., 100., 1.)
@@ -32,9 +32,9 @@ def test_G_001_production_price():
     model.add_component(gas)
     model.add_component(load)
 
-    model.plug_to_bus(oil.power_out, "bus_1", False, 1., 0.)
-    model.plug_to_bus(gas.power_out, "bus_1", False, 1., 0.)
-    model.plug_to_bus(load.power_in, "bus_1", True, 1., 0.)
+    model.plug_to_bus(oil.power_out, bus.output, 1., 0.)
+    model.plug_to_bus(gas.power_out, bus.output, 1., 0.)
+    model.plug_to_bus(load.power_in, bus.input, 1., 0.)
 
     model.define_time_range(3600., 1, 1000, 1)
     model.solve()

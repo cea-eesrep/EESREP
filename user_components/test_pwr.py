@@ -1,6 +1,7 @@
 import math
 from os import environ, path
 
+from eesrep.components.bus import GenericBus
 import numpy as np
 import pandas as pd
 import pytest
@@ -34,9 +35,8 @@ def test_PWR_001():
 
     import matplotlib.pyplot as plt
 
-    model.create_bus("bus", {
-                                "name":"bus_1"
-                            })
+    bus = GenericBus("bus")
+    model.add_component(bus)
 
     source = Source("source", 0., 10000., 1.)
     unsupplied = Source("unsupplied", 0., 10000., 10.)
@@ -63,10 +63,10 @@ def test_PWR_001():
 
     model.add_link(source.power_out, pwr.power_in, 1., 0.)
 
-    model.plug_to_bus(pwr.power_out, "bus_1", True, 1., 0.)
-    model.plug_to_bus(unsupplied.power_out, "bus_1", True, 1., 0.)
-    model.plug_to_bus(fatal_sink.power_in, "bus_1", False, 1., 0.)
-    model.plug_to_bus(spilled.power_in, "bus_1", False, 1., 0.)
+    model.plug_to_bus(pwr.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(unsupplied.power_out, bus.input, 1., 0.)
+    model.plug_to_bus(fatal_sink.power_in, bus.output, 1., 0.)
+    model.plug_to_bus(spilled.power_in, bus.output, 1., 0.)
 
     model.define_time_range(3600., 100, 100, 10)
 
