@@ -35,7 +35,7 @@ from eesrep.components.storage import GenericStorage
 
 data = pd.read_csv("AEN_timeseries.csv", sep=";")
 
-model = eesrep.Eesrep(solver="DOCPLEX")
+model = eesrep.Eesrep(interface="docplex")
 
 Zone_1 = GenericBus("Zone_1")
 
