@@ -904,7 +904,7 @@ class Eesrep:
         self._build_results()
 
         if self.__post_processing is not None:
-            print(f"Running provided post-processing function named {self.__post_processing.__name__}")
+            print(f"Running provided post-processing function.")
             save_len_results:int = len(self.__results)
 
             save_keys_results:List[str] = list(self.__results.keys())
