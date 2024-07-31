@@ -4,8 +4,10 @@ from docplex.mp.linear import Var, LinearExpr
 from docplex.mp.model import Model
 import pandas as pd
 
+from eesrep import solver_options
 from eesrep.solver_interface.generic_interface import GenericInterface
-from eesrep.eesrep_exceptions import *
+from eesrep.eesrep_exceptions import SolverOptionException, UnsolvableProblemException, UnsolvedProblemException
+from eesrep.solver_options import SolverOption
 
 class DocplexInterface(GenericInterface):
     """Interface class between the python DOCPLEX module and Esreep."""
@@ -24,7 +26,7 @@ class DocplexInterface(GenericInterface):
         else:
             self.__direction = "max"
 
-        self.__model = Model()
+        self.__model:Model = Model()
         self.solve_status = None
 
     def get_new_continuous_variable(
@@ -173,20 +175,53 @@ class DocplexInterface(GenericInterface):
         solve_parameters : dict, optional
             Lists the interface solve options:
             Writes or prints the log of the resolution, by default False
+            
+        Raises
+        ------
+            SolverOptionException
+                One of the solve parameters is not implemented for this interface.
         """
 
         #   Parameters help : https://www.ibm.com/docs/en/icos/12.9.0?topic=cplex-list-parameters
         
-        self.__model.parameters.mip.tolerances.mipgap = float(solve_parameters["gap"]) if "gap" in solve_parameters else 0.
-        self.__model.parameters.threads = int(solve_parameters["threads"]) if "threads" in solve_parameters else 8
+        mipgap = 0
+        threads = 8
+        method = "concurrent"
+        start_algorithm = "concurrent"
+        write_lp = False
+        print_log = False
+        dual_prepro = False
 
-        if "dual_prepro" in solve_parameters and solve_parameters["dual_prepro"]:
-            self.__model.parameters.preprocessing.dual = 1
+        for option in solve_parameters:
+            if option == SolverOption.MILP_GAP:
+                mipgap = float(solve_parameters[SolverOption.MILP_GAP])
+                
+            elif option == SolverOption.THREADS:
+                threads = int(solve_parameters[SolverOption.THREADS])
 
-        if "time_limit" in solve_parameters:
-            self.__model.parameters.timelimit = float(solve_parameters["time_limit"])
+            elif option == SolverOption.METHOD:
+                method = solve_parameters[SolverOption.METHOD]
+            
+            elif option == SolverOption.TIME_LIMIT:
+                self.__model.parameters.timelimit = float(solve_parameters[SolverOption.TIME_LIMIT])
+            
+            elif option == SolverOption.WRITE_PROBLEM:
+                write_lp = solve_parameters[SolverOption.WRITE_PROBLEM]
+            
+            elif option == SolverOption.PRINT_LOG:
+                print_log = solve_parameters[SolverOption.PRINT_LOG]
 
-        method = solve_parameters["method"] if "method" in solve_parameters else "concurrent"
+            elif option == "start_algorithm":
+                start_algorithm = solve_parameters["start_algorithm"]
+
+            elif option == "dual_prepro":
+                dual_prepro = solve_parameters["dual_prepro"]
+            
+            else:
+                raise SolverOptionException(option, self.__class__.__name__)
+
+        self.__model.parameters.mip.tolerances.mipgap = mipgap
+        self.__model.parameters.threads = threads
 
         if method == "automatic":
             self.__model.parameters.lpmethod = 0
@@ -198,12 +233,13 @@ class DocplexInterface(GenericInterface):
             self.__model.parameters.lpmethod = 4
         elif method == "concurrent":
             self.__model.parameters.lpmethod = 6
+        
+        if dual_prepro:
+            self.__model.parameters.preprocessing.dual = 1
 
         # https://www.ibm.com/docs/en/icos/22.1.0?topic=parameters-algorithm-initial-mip-relaxation
         # parameters.mip.strategy.startalgorithm
         
-        start_algorithm = solve_parameters["start_algorithm"] if "start_algorithm" in solve_parameters else "concurrent"
-
         if start_algorithm == "automatic":
             self.__model.parameters.mip.strategy.startalgorithm = 0
         elif start_algorithm == "primal_simplex":
@@ -215,11 +251,10 @@ class DocplexInterface(GenericInterface):
         elif start_algorithm == "concurrent":
             self.__model.parameters.mip.strategy.startalgorithm = 6
 
-
-        if "write_problem" in solve_parameters and solve_parameters["write_problem"]:
+        if write_lp:
             self.__model.export_as_lp("my_problem.lp")
 
-        self.solve_status = self.__model.solve(log_output = "write_log" in solve_parameters and solve_parameters["write_log"])
+        self.solve_status = self.__model.solve(log_output = print_log)
 
         if self.solve_status is None:
             raise UnsolvableProblemException()

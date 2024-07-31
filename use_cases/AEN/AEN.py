@@ -1,6 +1,7 @@
 import pandas as pd
 
 import eesrep
+from eesrep.solver_options import SolverOption
 from eesrep.components.bus import GenericBus
 from eesrep.components.converter import Cluster, Converter
 from eesrep.components.sink_source import FatalSink, FatalSource, Sink, Source
@@ -314,11 +315,11 @@ model.plug_to_bus(transfert_2_1.power_out, Zone_1.input, 1., 0.)
 model.define_time_range(3600., 168, 168, 52)
 
 model.solve(solve_parameters={
-                                "gap":0.001,
-                                "threads": 8,
+                                SolverOption.MILP_GAP:0.001,
+                                SolverOption.THREADS: 8,
                                 "write_log":True,
-                                "write_problem":True,
-                                "method": "automatic",
+                                SolverOption.WRITE_PROBLEM:True,
+                                SolverOption.METHOD: "automatic",
                                 "start_algorithm": "automatic"
                                 # "time_limit": 10000.,
                                 # "dual_prepro":True

@@ -233,7 +233,10 @@ class GenericInterface(ABC):
         Raises
         ------
         NotImplementedError
-            Must be overridden by the solver interface
+            Must be overridden by the solver interface*
+
+        SolverOptionException
+            One of the solve parameters is not implemented for this interface.
         """
         raise NotImplementedError
 

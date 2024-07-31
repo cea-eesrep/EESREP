@@ -6,6 +6,7 @@ import pytest
 
 from eesrep import Eesrep
 from eesrep.components.sink_source import FatalSource, Sink
+from eesrep.solver_options import SolverOption
 
 from neural_network import NeuralNetwork
 
@@ -48,7 +49,7 @@ def test_nn_1_1():
 
     model.define_time_range(3600., 300, 200, 2)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 
@@ -91,7 +92,7 @@ def test_nn_2_1():
 
     model.define_time_range(3600., 100, 100, 3)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 
@@ -132,7 +133,7 @@ def test_nn_1_2():
 
     model.define_time_range(3600., 100, 100, 3)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 
@@ -177,7 +178,7 @@ def test_nn_2_2():
 
     model.define_time_range(3600., 100, 100, 3)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 
@@ -215,7 +216,7 @@ def test_nn_1_15_15_1():
 
     model.define_time_range(3600., 10, 10, 30)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 
@@ -253,7 +254,7 @@ def test_nn_1_5_5_1():
 
     model.define_time_range(3600., 100, 100, 3)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 
@@ -292,7 +293,7 @@ def test_nn_1_5_5_5_5_5_5_1():
 
     model.define_time_range(3600., 10, 10, 30)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 
@@ -336,7 +337,7 @@ def test_nn_2_5_5_5_2():
 
     model.define_time_range(3600., 100, 100, 3)
 
-    model.solve(solve_parameters={"write_log":True})
+    model.solve(solve_parameters={SolverOption.PRINT_LOG:True})
 
     results = model.get_results(as_dataframe=True)
 

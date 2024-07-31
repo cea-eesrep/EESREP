@@ -52,6 +52,9 @@ class UnsolvedProblemException(Exception):
     def __init__(self):
         super().__init__("The problem was not solved yet.")
 
+class SolverOptionException(Exception):
+    def __init__(self, option_key:str, solver_interface:str):
+        super().__init__(f"Option '{option_key}' is not implemented for interface : {solver_interface}")
 
 
 

@@ -205,7 +205,16 @@ class MIPInterface():
         ----------
         solve_parameters : dict, optional
             Lists the interface solve options
+            
+        Raises
+        ------
+            SolverOptionException
+                One of the solve parameters is not implemented for this interface.
         """
+        
+        for option in solve_parameters:
+            raise SolverOptionException(option, self.__class__.__name__)
+            
         self.solve_status = self.__model.optimize()
         if not self.solve_status in (
                 mip.OptimizationStatus.OPTIMAL,

@@ -16,7 +16,7 @@ dist
 .pytest_cache
 __pycache__
 docs/eesrep-doc
-dist
+build
 
 # Doc replaced files
 docs/eesrep-sphinx-sources/md_doc/README.md

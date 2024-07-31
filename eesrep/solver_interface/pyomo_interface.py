@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+from eesrep.solver_options import SolverOption
 from pyomo.opt import SolverFactory
 import pyomo.environ as pyo
 from pyomo.environ import value
@@ -204,16 +205,33 @@ class PyomoInterface(GenericInterface):
         solve_parameters : dict, optional
             Lists the interface solve options:
             - write_problem : Writes the problem in a .lp file
+            
+        Raises
+        ------
+            SolverOptionException
+                One of the solve parameters is not implemented for this interface.
         """
-        # self.__opt.options['mipgap']= 0.01
-        #opt.options['mip tolerances absmipgap'] = gap_limit
-        if "write_problem" in solve_parameters and solve_parameters["write_problem"]:
-            self.__model.write("my_problem.lp")
+        threads = 8
+        write_lp = False
+        print_log = False
 
-        write_log = "write_log" in solve_parameters and solve_parameters["write_log"]
-        threads = int(solve_parameters["threads"]) if "threads" in solve_parameters else 8
+        for option in solve_parameters:
+            if option == SolverOption.THREADS:
+                threads = int(solve_parameters[SolverOption.THREADS])
+
+            elif option == SolverOption.WRITE_PROBLEM:
+                write_lp = solve_parameters[SolverOption.WRITE_PROBLEM]
+            
+            elif option == SolverOption.PRINT_LOG:
+                print_log = solve_parameters[SolverOption.PRINT_LOG]
+            
+            else:
+                raise SolverOptionException(option, self.__class__.__name__)
+            
+        if write_lp:
+            self.__model.write("my_problem.lp")
         
-        self.__results = self.__opt.solve(self.__model, options={"threads": threads}, tee = write_log)
+        self.__results = self.__opt.solve(self.__model, options={"threads": threads}, tee = print_log)
 
         if (self.__results.solver.status == SolverStatus.ok) and (self.__results.solver.termination_condition == TerminationCondition.optimal):
             self.solve_status = self.__results.solver.status
