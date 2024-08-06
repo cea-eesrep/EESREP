@@ -91,6 +91,7 @@ class Eesrep:
         self.__solved_horizons: int = 0
         self.custom_steps: List[float] = []
         self.solve_parameters: dict = {}
+        self.path_intermediary_results: str = ""
 
         self.__post_processing:Callable[[pd.DataFrame], pd.DataFrame] = None
 
@@ -805,6 +806,9 @@ class Eesrep:
         """
         self.solve_parameters = solve_parameters
 
+        if "Path_intermediary_results" in self.solve_parameters.keys():
+            self.path_intermediary_results = self.solve_parameters["Path_intermediary_results"]
+
         if self.__steps_solved == 0:
             self.__interpolate_time_series()
 
@@ -923,8 +927,11 @@ class Eesrep:
 
             if new_keys_results != save_keys_results:
                 raise PostProcessingException(f"The result dataframe columns names changed during the post-processing.")
-            
+    
         self.__cumulated_objective += self.__model.get_result_objective()
+
+        if self.path_intermediary_results != "":
+            self.__results.to_csv(self.path_intermediary_results)
 
     #@profile
     def _create_link(self, link_properties:dict):
