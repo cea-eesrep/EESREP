@@ -6,7 +6,7 @@ import pytest
 
 from eesrep import Eesrep
 from eesrep.components.sink_source import FatalSource, Sink
-from eesrep.solver_options import SolverOption
+from eesrep.eesrep_enum import SolverOption
 
 from neural_network import NeuralNetwork
 

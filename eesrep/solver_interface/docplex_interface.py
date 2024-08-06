@@ -4,10 +4,9 @@ from docplex.mp.linear import Var, LinearExpr
 from docplex.mp.model import Model
 import pandas as pd
 
-from eesrep import solver_options
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_exceptions import SolverOptionException, UnsolvableProblemException, UnsolvedProblemException
-from eesrep.solver_options import SolverOption
+from eesrep.eesrep_enum import SolverOption
 
 class DocplexInterface(GenericInterface):
     """Interface class between the python DOCPLEX module and Esreep."""

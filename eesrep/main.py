@@ -1,6 +1,8 @@
 """EESREP model builder and solver module"""
 
 import inspect
+import os
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
 from eesrep.components.bus import GenericBus
@@ -37,7 +39,7 @@ except ImportError:
         def __init__(self, direction:str = "Minimize", solver:str = "CPLEX"):
                 raise ImportError("Error while importing Pyomo Interface. Make sure you have the pyomo module installed.")
 
-from .eesrep_enum import TimeSerieType
+from .eesrep_enum import SolverOption, TimeSerieType
 
 class Eesrep:
     """
@@ -91,7 +93,7 @@ class Eesrep:
         self.__solved_horizons: int = 0
         self.custom_steps: List[float] = []
         self.solve_parameters: dict = {}
-        self.path_intermediary_results: str = ""
+        self.__path_intermediary_results: str = ""
 
         self.__post_processing:Callable[[pd.DataFrame], pd.DataFrame] = None
 
@@ -801,13 +803,21 @@ class Eesrep:
 
         Raises
         ------
+        ValueError
+            Provided path for intermediate result file leads to an unexisting folder.
         UndefinedTimeRangeException
             Solve function called before defining the time range.
         """
         self.solve_parameters = solve_parameters
 
-        if "Path_intermediary_results" in self.solve_parameters.keys():
-            self.path_intermediary_results = self.solve_parameters["Path_intermediary_results"]
+        if SolverOption.INTERMEDIATE_RESULTS_PATH in self.solve_parameters.keys():
+            if not os.path.isdir(Path(self.solve_parameters[SolverOption.INTERMEDIATE_RESULTS_PATH]).absolute().parent):
+                raise ValueError("Provided intermediate result file parent folder does not exist.")
+                
+            self.__path_intermediary_results = self.solve_parameters[SolverOption.INTERMEDIATE_RESULTS_PATH]
+
+            #   Removing the parameter as it is not supposed to be given to the solver_intefaces
+            del solve_parameters[SolverOption.INTERMEDIATE_RESULTS_PATH]
 
         if self.__steps_solved == 0:
             self.__interpolate_time_series()
@@ -930,8 +940,10 @@ class Eesrep:
     
         self.__cumulated_objective += self.__model.get_result_objective()
 
-        if self.path_intermediary_results != "":
-            self.__results.to_csv(self.path_intermediary_results)
+        if self.__path_intermediary_results != "":
+            print(f"Writing results of horizon {self.__steps_solved} to file {self.__path_intermediary_results}")
+
+            self.__results.to_csv(self.__path_intermediary_results)
 
     #@profile
     def _create_link(self, link_properties:dict):

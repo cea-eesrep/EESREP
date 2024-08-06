@@ -1,5 +1,6 @@
 
 from os import environ
+import os
 
 from eesrep.components.bus import GenericBus
 import numpy as np
@@ -11,7 +12,7 @@ import eesrep
 from eesrep.components.converter import Converter
 from eesrep.components.generic_component import GenericComponent
 from eesrep.components.sink_source import FatalSink, Source
-from eesrep.eesrep_enum import TimeSerieType
+from eesrep.eesrep_enum import SolverOption, TimeSerieType
 from eesrep.eesrep_exceptions import ComponentIOException, ComponentNameException, UndefinedTimeRangeException
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.test_interface_solver import get_couple_from_key
@@ -456,4 +457,38 @@ def test_add_io_to_objective_wrong_io():
         model.add_io_to_objective(ComponentIO("source_1", "wrong_io", TimeSerieType.INTENSIVE, False), price=50.)
         assert False, "The provided IO does not exist for given component."
     except ComponentIOException:
+        assert True
+
+
+@pytest.mark.Unit
+@pytest.mark.solve
+def test_intermediate_result():
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    
+    model.define_time_range(1., 1, 1, 2)
+
+    make_basic_model_with_bus(model, True, 1., 0.)
+
+    model.solve({SolverOption.INTERMEDIATE_RESULTS_PATH:"result.csv"})
+    read_csv_file = pd.read_csv("result.csv")
+    del read_csv_file["Unnamed: 0"]
+
+    os.remove("result.csv")
+
+    assert model._Eesrep__results.all().all() == read_csv_file.all().all()
+
+
+@pytest.mark.Unit
+@pytest.mark.solve
+def test_intermediate_result_wrong_path():
+    model = eesrep.Eesrep(solver=solver_for_tests, interface=interface_for_tests)
+    
+    model.define_time_range(1., 1, 1, 2)
+
+    make_basic_model_with_bus(model, True, 1., 0.)
+
+    try:
+        model.solve({SolverOption.INTERMEDIATE_RESULTS_PATH:"/home/wdfzejgznerjgzenrg/result.csv"})
+        assert False, "Intermediate result path leads to an unexisting file."
+    except ValueError:
         assert True

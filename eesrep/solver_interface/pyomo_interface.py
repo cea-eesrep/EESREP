@@ -2,7 +2,6 @@
 
 import pandas as pd
 
-from eesrep.solver_options import SolverOption
 from pyomo.opt import SolverFactory
 import pyomo.environ as pyo
 from pyomo.environ import value
@@ -13,6 +12,7 @@ from pyomo.util.infeasible import log_infeasible_constraints
 
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_exceptions import *
+from eesrep.eesrep_enum import SolverOption
 
 class PyomoInterface(GenericInterface):
     """Interface class between the python PYOMO module and Esreep."""

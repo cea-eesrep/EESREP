@@ -1,11 +1,11 @@
 import pandas as pd
 
 import eesrep
-from eesrep.solver_options import SolverOption
 from eesrep.components.bus import GenericBus
 from eesrep.components.converter import Cluster, Converter
 from eesrep.components.sink_source import FatalSink, FatalSource, Sink, Source
 from eesrep.components.storage import GenericStorage
+from eesrep.eesrep_enum import SolverOption
 
 """
     This use case consists in two lined area that both have:

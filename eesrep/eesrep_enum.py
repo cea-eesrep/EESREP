@@ -10,3 +10,12 @@ class TimeSerieType(Enum):
     """
     INTENSIVE = 1
     EXTENSIVE = 2
+
+class SolverOption(Enum):
+    METHOD="method"
+    MILP_GAP="gap"
+    PRINT_LOG="print_log"
+    THREADS="threads"
+    TIME_LIMIT="time_limit"
+    WRITE_PROBLEM="write_problem"
+    INTERMEDIATE_RESULTS_PATH="path_intermediary_results"
