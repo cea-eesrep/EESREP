@@ -57,7 +57,7 @@ Storage_1 = GenericStorage(name="Storage_1",
                                     p_max=4500.,
                                     storage_max=4500.*7.*24./2.,
                                     efficiency=0.8,
-                                    s_init=0.)
+                                    init_storage=0.)
 
 Solar_1  = FatalSource(name="Solar_1",
                                     source_flow=data[["Time", "Solar_1"]].rename(columns={"Time":"time", "Solar_1":"value"}))
@@ -121,7 +121,7 @@ Storage_2 = GenericStorage(name="Storage_2",
                                     p_max=8000.,
                                     storage_max=8000.*7.*24./2.,
                                     efficiency=0.8,
-                                    s_init=0.)
+                                    init_storage=0.)
 
 Solar_2 = FatalSource(name="Solar_2", source_flow=data[["Time", "Solar_2"]].rename(columns={"Time":"time", "Solar_2":"value"}))
 Wind_2 = FatalSource(name="Wind_2", source_flow=data[["Time", "Wind_2"]].rename(columns={"Time":"time", "Wind_2":"value"}))

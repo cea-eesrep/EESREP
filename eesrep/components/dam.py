@@ -102,7 +102,16 @@ class Dam(GenericComponent):
             Time serie defining a variable average storage bound, by default pd.DataFrame()
         variable_storage_max : pd.DataFrame, optional
             Time serie defining a variable maximum storage bound, by default pd.DataFrame()
+            
+        Raises
+        ------
+            ValueError
+                init_storage is not between 0 and 1.
         """          
+
+        if not 0. <= init_storage <= 1.:
+            raise ValueError(f"init_storage must be between 0 and 1, found {init_storage}.")
+        
         self.name = name
         self.efficiency = efficiency
         self.p_min = p_min

@@ -19,7 +19,7 @@ class GenericStorage(GenericComponent):
         - p_max : maximum input/output flux.
         - storage_max : maximum stored amount.
         - efficiency : loss while charging or discharging (counted twice if charge-discharge).
-        - s_init : initial storage at the first solved horizon.
+        - init_storage : initial storage at the first solved horizon.
     
     The component has the following variables:
 
@@ -27,7 +27,7 @@ class GenericStorage(GenericComponent):
         - storage : amount stored at each time step.
     
     """
-    def __init__(self, name:str, p_max:float, storage_max:float, efficiency:float, s_init:float):
+    def __init__(self, name:str, p_max:float, storage_max:float, efficiency:float, init_storage:float):
         """Instanciates a storage component with its options, to provide to EESREP.
 
         Parameters
@@ -40,14 +40,23 @@ class GenericStorage(GenericComponent):
             Storage capacity
         efficiency : float
             Efficiency of the storage
-        s_init : float
-            Price of each energy unit provided by the source
-        """
+        init_storage : float
+            storage value at the first horizon first time step (normalised with max_storage)
+
+        Raises
+        ------
+            ValueError
+                init_storage is not between 0 and 1.
+        """          
+
+        if not 0. <= init_storage <= 1.:
+            raise ValueError(f"init_storage must be between 0 and 1, found {init_storage}.")
+        
         self.name = name
         self.p_max = p_max
         self.storage_max = storage_max
         self.efficiency = efficiency
-        self.s_init = s_init
+        self.init_storage = init_storage
 
         self.time_series = {}
         
@@ -100,7 +109,7 @@ class GenericStorage(GenericComponent):
         if len(history) > 0:
             storage_init = history["storage"].iloc[-1]
         else:
-            storage_init = self.s_init*self.storage_max
+            storage_init = self.init_storage*self.storage_max
 
         model_interface.add_equality(model_interface.sum_variables([variables["storage"][0], -storage_init, -variables["flow"][0]*math.sqrt(self.efficiency)*time_steps[0]]), 0)
         
