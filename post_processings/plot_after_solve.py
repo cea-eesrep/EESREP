@@ -1,4 +1,13 @@
 """
+
+This file gives an example of post-processing function that draws and update a results plot at every solved rolling horizon.
+
+This allows to see the results in real time.
+
+"""
+
+
+"""
     Imports
 """
 import functools
