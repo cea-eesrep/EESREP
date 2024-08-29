@@ -310,14 +310,12 @@ model.plug_to_bus(transfert_1_2.power_out, Zone_2.input, 1., 0.)
 model.plug_to_bus(transfert_2_1.power_in, Zone_2.output, 1., 0.)
 model.plug_to_bus(transfert_2_1.power_out, Zone_1.input, 1., 0.)
 
-
-
 model.define_time_range(3600., 168, 168, 52)
 
 model.solve(solve_parameters={
                                 SolverOption.MILP_GAP:0.001,
                                 SolverOption.THREADS: 8,
-                                "write_log":True,
+                                SolverOption.PRINT_LOG:True,
                                 SolverOption.WRITE_PROBLEM:True,
                                 SolverOption.METHOD: "automatic",
                                 "start_algorithm": "automatic"
