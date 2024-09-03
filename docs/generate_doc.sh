@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 export PROJECT_NAME="eesrep"
-alias python37="/volatile/catB/CPLEX/Python-3.7.9/python"
+alias python37="/home/trilogy-public/Python-3.7.9/python"
 
 if [[ -z "${PROJECT_NAME}" ]]; then
     echo "'PROJECT_NAME' environment variable must be defined"
@@ -92,7 +92,7 @@ current_dir="${PWD}"
 #############################
 project_name="${PROJECT_NAME}"
 project_author="CEA"
-project_version=$(/volatile/catB/CPLEX/Python-3.7.9/python -c "import ${PROJECT_NAME}; print(${PROJECT_NAME}.__version__)")
+project_version=$(/home/trilogy-public/Python-3.7.9/python -c "import ${PROJECT_NAME}; print(${PROJECT_NAME}.__version__)")
 
 doc_build_dir=${project_doc_dir}/${project_name}-sphinx-sources
 doc_output_dir_prefix=${project_doc_dir}/${project_name}-doc

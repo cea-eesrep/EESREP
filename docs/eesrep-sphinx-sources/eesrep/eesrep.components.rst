@@ -7,6 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   eesrep.components.bus
    eesrep.components.converter
    eesrep.components.dam
    eesrep.components.generic_component
