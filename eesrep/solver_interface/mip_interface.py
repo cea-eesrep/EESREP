@@ -237,7 +237,8 @@ class MIPInterface():
                 new_df.loc[:, component+"_"+variable] = variable_dict[component][variable]
 
         for column in new_df:
-            if isinstance(new_df[column][0], mip.entities.Var):
+            if isinstance(new_df[column][0], mip.entities.Var) or \
+                    isinstance(new_df[column][0], mip.entities.LinExpr):
                 new_df.loc[:, column] = new_df[column].apply(lambda y: y.x)
 
         return new_df

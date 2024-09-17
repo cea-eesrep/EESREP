@@ -46,7 +46,8 @@ class FakeComponent(GenericComponent):
         time_steps:list,
         time_series:pd.DataFrame,
         history:pd.DataFrame,
-        model_interface:GenericInterface):
+        model_interface:GenericInterface,
+        future:pd.DataFrame = None):
         pass
 
 

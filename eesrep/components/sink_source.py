@@ -84,7 +84,8 @@ class Source(GenericComponent):
         time_steps:list,
         time_series:pd.DataFrame,
         history:pd.DataFrame,
-        model_interface:GenericInterface):
+        model_interface:GenericInterface,
+        future:pd.DataFrame = None):
         """Builds the model at the current horizon.
 
         Parameters
@@ -99,6 +100,8 @@ class Source(GenericComponent):
             Dataframe with the variables of previous iterations if "continuity" is at true.
         model_interface : GenericInterface
             Solver interface used to provide the variables
+        future : pd.DataFrame
+            Dataframe with the previsions of variables of previous iterations if "continuity" is at true.
 
         """
 
@@ -184,7 +187,8 @@ class Sink(GenericComponent):
         time_steps:list,
         time_series:pd.DataFrame,
         history:pd.DataFrame,
-        model_interface:GenericInterface):
+        model_interface:GenericInterface,
+        future:pd.DataFrame = None):
         """Builds the model at the current horizon.
 
         Parameters
@@ -199,6 +203,8 @@ class Sink(GenericComponent):
             Dataframe with the variables of previous iterations if "continuity" is at true.
         model_interface : GenericInterface
             Solver interface used to provide the variables
+        future : pd.DataFrame
+            Dataframe with the previsions of variables of previous iterations if "continuity" is at true.
 
         """
         objective = 0.
@@ -272,7 +278,8 @@ class FatalSource(GenericComponent):
         time_steps:list,
         time_series:pd.DataFrame,
         history:pd.DataFrame,
-        model_interface:GenericInterface):
+        model_interface:GenericInterface,
+        future:pd.DataFrame = None):
         """Builds the model at the current horizon.
 
         Parameters
@@ -287,6 +294,8 @@ class FatalSource(GenericComponent):
             Dataframe with the variables of previous iterations if "continuity" is at true.
         model_interface : GenericInterface
             Solver interface used to provide the variables
+        future : pd.DataFrame
+            Dataframe with the previsions of variables of previous iterations if "continuity" is at true.
 
         """
         objective = 0.
@@ -353,7 +362,8 @@ class FatalSink(GenericComponent):
         time_steps:list,
         time_series:pd.DataFrame,
         history:pd.DataFrame,
-        model_interface:GenericInterface):
+        model_interface:GenericInterface,
+        future:pd.DataFrame = None):
         """Builds the model at the current horizon.
 
         Parameters
@@ -368,6 +378,8 @@ class FatalSink(GenericComponent):
             Dataframe with the variables of previous iterations if "continuity" is at true.
         model_interface : GenericInterface
             Solver interface used to provide the variables
+        future : pd.DataFrame
+            Dataframe with the previsions of variables of previous iterations if "continuity" is at true.
 
         """
         objective = 0.

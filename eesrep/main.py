@@ -1,19 +1,21 @@
 """EESREP model builder and solver module"""
 
+from collections import Counter
 import inspect
 import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
-from eesrep.components.bus import GenericBus
 import numpy as np
 import pandas as pd
 
 from .components.generic_component import GenericComponent
+from .components.bus import GenericBus
 from .eesrep_exceptions import *
+from .eesrep_io import ComponentIO
 from .solver_interface.generic_interface import GenericInterface
 from .solver_interface.interface_tester import InterfaceTester
-from .eesrep_io import ComponentIO
+from .time_serie_manager import TimeSerieManager
 
 try:
     from .solver_interface.docplex_interface import DocplexInterface
@@ -73,7 +75,7 @@ class Eesrep:
         self.__results: pd.DataFrame = pd.DataFrame()
         self.__links: List[str, Any, str, Any , float, float] = []
 
-        self.__time_series: pd.DataFrame = pd.DataFrame()
+        self.__time_serie_manager: TimeSerieManager = TimeSerieManager()
 
         self.__current_time: float = 0.
         self.__steps_solved: int = 0
@@ -83,8 +85,6 @@ class Eesrep:
         self.__objective_io_list: List[Tuple[ComponentIO, float]] = []
 
         self.__time_range_defined: bool = False
-
-        self.__component_definition: Dict[str, Callable] = {}
 
         self.time_step: float = -1
         self.time_shift: int = -1
@@ -236,7 +236,9 @@ class Eesrep:
             self.__components[name] = component
         
         for time_serie in time_series:
-            self.__add_time_serie(name+"_"+time_serie, self.__components[name].time_series[time_serie]["value"])
+            self.__time_serie_manager.add_time_serie(name+"_"+time_serie, 
+                                                     self.__components[name].time_series[time_serie]["value"],
+                                                     self.__is_it_intensive(name, time_serie))
     
     #@profile
     def get_variables(self) -> dict:
@@ -428,32 +430,23 @@ class Eesrep:
         else:
             raise UndefinedTimeRangeException()
 
-    #@profile
-    def __add_time_serie(self, time_serie_name:str, time_serie:pd.DataFrame):
-        """Adds a time serie dictionnary to the time series dataframe.
+    def __make_time_steps(self) -> list:
+        """Returns the steps times of the current solve.
 
-        Parameters
-        ----------
-        time_serie_name : str
-            Name of the time serie
-        time_serie : pd.DataFrame
-            Time serie dataframe
+        Returns
+        -------
+        list
+            List of the current horizon time steps value.
+
+        Raises
+        ------
+        UndefinedTimeRangeException
+            Can't be called before defining time steps
         """
-        if len(self.__time_series.columns) == 0:
-            time_serie.set_index("time", inplace=True, drop=False)
-            self.__time_series = time_serie
-            self.__time_series = self.__time_series.rename(columns={"value":time_serie_name})
-        else:
-            time_serie.set_index("time", inplace=True)
-            time_serie = (time_serie[["value"]]).rename(columns={"value":time_serie_name})
+        if not self.__time_range_defined:
+            raise UndefinedTimeRangeException()
 
-            self.__time_series = pd.concat([self.__time_series, time_serie], axis=1)
-
-    #@profile
-    def __interpolate_time_series(self):
-        """Interpolates the potential NaN values in the time series dataframe. 
-        """
-        self.__time_series = self.__time_series.interpolate()
+        return [self.__current_time + sum(self.custom_steps[:i])*self.time_step for i in range(len(self.custom_steps)+1)]
 
     #@profile
     def add_link(self,
@@ -585,94 +578,6 @@ class Eesrep:
         if price != 0.:
             self.__objective_io_list.append((io, price))
         
-    #@profile
-    def __interpolate(self, dataframe:pd.DataFrame, times:list, column_name:str) -> np.ndarray:
-        """Get the values at the given times of the requested column in a pandas dataframe.
-
-        Parameters
-        ----------
-        dataframe : pd.DataFrame
-            Datafame in which pick the column
-        times : list
-            Times at which interpolate
-        column_name : str
-            Column to interpolate name.
-
-        Returns
-        -------
-        np.ndarray
-            _description_
-            
-        Raises
-        ------
-        KeyError
-            The dataframe doesn't have a 'time' column
-        KeyError
-            The dataframe doesn't have the requested column
-        """
-        if not "time" in dataframe.columns:
-            raise KeyError("The given dataframe has no column 'time'.")
-        if not column_name in dataframe.columns:
-            raise KeyError(f"The given dataframe has no column '{column_name}'.")
-
-        return np.interp(times, dataframe["time"], dataframe[column_name])
-
-    #@profile
-    def __make_ts_integrated_column(self, column_name:str):
-        """Adds to the time series dataframe the integral of a column.
-
-        Parameters
-        ----------
-        column_name : str
-            Column name to integrate.
-
-        Raises
-        ------
-        KeyError
-            The self.__time_series dataframe doesn't have the requested column
-        """
-        if not column_name in self.__time_series:
-            raise KeyError(f"The self.__time_series dataframe has no column '{column_name}'.")
-
-        time_serie = pd.DataFrame()
-        time_serie.loc[:, "average_"+column_name] = self.__time_series[column_name].rolling(2, min_periods=1).sum()*0.5
-
-        if "diff_time" not in self.__time_series.columns:
-            self.__time_series = pd.concat([self.__time_series, pd.DataFrame({"diff_time":self.__time_series["time"].diff()})], axis=1)
-            self.__time_series.loc[0, "diff_time"] = 0.
-            
-        time_serie.loc[:, "local_integral_"+column_name] = \
-            self.__time_series[column_name]*self.__time_series["diff_time"]
-        
-        time_serie.loc[0, "local_integral_"+column_name] = 0.
-
-        time_serie.loc[:, "integrated_"+column_name] = \
-            time_serie["local_integral_"+column_name].cumsum()
-
-        del time_serie["local_integral_"+column_name]
-        
-        self.__time_series = pd.concat([self.__time_series, time_serie], axis=1)
-
-
-    #@profile
-    def __make_time_steps(self) -> list:
-        """Returns the steps times of the current solve.
-
-        Returns
-        -------
-        list
-            List of the current horizon time steps value.
-
-        Raises
-        ------
-        UndefinedTimeRangeException
-            Can't be called before defining time steps
-        """
-        if not self.__time_range_defined:
-            raise UndefinedTimeRangeException()
-
-        return [self.__current_time + sum(self.custom_steps[:i])*self.time_step for i in range(len(self.custom_steps)+1)]
-
 
     #@profile
     def __is_it_intensive(self, component_name:str, time_serie:str) -> bool:
@@ -743,56 +648,6 @@ class Eesrep:
         raise TimeSerieException(self.__components[component_name].__class__.__name__, time_serie)
 
     #@profile
-    def __get_time_serie_extract(self, component_name:str) -> pd.DataFrame:
-        """Gets the time series at the current solve time steps of a given component.
-
-        Parameters
-        ----------
-        component_name : str
-            Component of which we want the time series.
-
-        Returns
-        -------
-        pd.DataFrame
-            Requested time series
-
-        Raises
-        ------
-        RuntimeError
-            Can't extract time series before defining time range.
-        ComponentNameException
-            No component at the given name.
-        ValueError
-            Internal error : The definition of one of the time serie is neither extensive or intensive.
-        """
-
-        ts_extract = {}
-
-        if not self.__time_range_defined:
-            raise RuntimeError(f"Can't extract time series before defining time range.")
-        if not component_name in self.__components:
-            raise ComponentNameException(component_name)
-
-        current_solve_time_steps = self.__make_time_steps()
-
-        for key in self.__components[component_name].get_time_series():
-            column_name = component_name+"_"+key
-
-            if not "integrated_"+column_name in self.__time_series:
-                self.__make_ts_integrated_column(column_name)
-
-            interpolated_values = self.__interpolate(self.__time_series, current_solve_time_steps, "integrated_"+column_name)
-
-            if self.__is_it_intensive(component_name, key):
-                ts_extract[key] = np.diff(interpolated_values)/(np.array(self.custom_steps)*self.time_step)
-            elif self.__is_it_extensive(component_name, key):
-                ts_extract[key] = np.diff(interpolated_values)
-            else:
-                raise ValueError(f"Time serie type for {key} of component {self.__components[component_name].__class__.__name__} is not correct.")
-
-        return pd.DataFrame(ts_extract)
-
-    #@profile
     def solve(self, solve_parameters:dict = {}):
         """Solves the created model.
 
@@ -820,7 +675,7 @@ class Eesrep:
             del solve_parameters[SolverOption.INTERMEDIATE_RESULTS_PATH]
 
         if self.__steps_solved == 0:
-            self.__interpolate_time_series()
+            self.__time_serie_manager.interpolate_time_series()
 
         if self.__time_range_defined:
             print("Running first time step")
@@ -853,6 +708,8 @@ class Eesrep:
     def _init_time_step(self):
         """Creates the MILP model from its components definitions."""
         self.__reset()
+            
+        current_solve_time_steps = self.__make_time_steps()
 
         if self.__steps_solved > 0:
             line_end = 0
@@ -861,36 +718,55 @@ class Eesrep:
                 line_end += 1
 
             old_results = self.__results[:line_end+1]
+            old_future_results = self.__results.iloc[line_end:]
+            
+            intensive_dict = {f"{c}_{io}":self.__components[c].io_from_parameters()[io].type == TimeSerieType.INTENSIVE for c in self.__components for io in self.__components[c].io_from_parameters()}
+            
+            future_manager = TimeSerieManager(time_serie_data=old_future_results, 
+                                                intensives=intensive_dict, 
+                                                is_future=True)
 
+        #   Initialising each component
         for component in self.__components.values():
-            time_series = self.__get_time_serie_extract(component.name)
+            component_time_series = self.__time_serie_manager.get_time_serie_extract(current_solve_time_steps, component)
 
-            history = pd.DataFrame()
-
+            #   Loading the results of previous horizons
             if self.__steps_solved > 0:
+                history = {}
+
                 for time_serie in self.get_component_io(component.name):
                     if self.get_component_io(component.name)[time_serie].continuity:
-                        if len(list(history.columns)) == 0:
+                        if len(list(history)) == 0:
                             history["time"] = old_results["time"]
 
-                        history.loc[:, time_serie] = old_results[component.name+"_"+time_serie]
+                        history[time_serie] = old_results[component.name+"_"+time_serie]
 
+                future = future_manager.get_time_serie_extract(current_solve_time_steps[:-1], component, if_continuity=True)
+            else:
+                history = {}
+                future = pd.DataFrame()
+
+            #   Building the model for each component
             variables, objective = component.build_model(component.name,
                                                             self.custom_steps,
-                                                            time_series,
-                                                            history,
-                                                            self.__model)
+                                                            component_time_series,
+                                                            pd.DataFrame(history),
+                                                            self.__model, 
+                                                            future = future)
 
             self.__variables[component.name] = variables
             self.__objective = self.__model.sum_variables([self.__objective, objective])
 
+        #   Mutualising the objectives of each component 
         for io_ in self.__objective_io_list:
             objective = self.__model.sum_variables([io_[1]*var for var in self.__variables[io_[0].component_name][io_[0].io_name]])
             self.__objective = self.__model.sum_variables([self.__objective, objective])
 
+        #   Creating links
         for link in self.__links:
             self._create_link(link)
 
+        #   Creating buses
         for bus in self.__buses.values():
             self._create_bus(bus)
 
@@ -954,7 +830,6 @@ class Eesrep:
         link_properties : dict
             Dictionnary of the link properties, provided in the *add_link* function.
         """
-
         for i in range(self.future_size):
             coeff_1 = 1.
             coeff_2 = 1.
@@ -978,12 +853,14 @@ class Eesrep:
             Bus properties provided while calling the create_bus function.
         """
         for step in range(self.future_size):
-
             input_coeffs = [self.custom_steps[step] if self.__is_it_intensive(i[0].component_name, i[0].io_name) else 1. for i in bus.inputs]
             output_coeffs = [self.custom_steps[step] if self.__is_it_intensive(o[0].component_name, o[0].io_name) else 1. for o in bus.outputs]
 
-            inputs = [input_coeffs[i]*(self.__variables[bus.inputs[i][0].component_name][bus.inputs[i][0].io_name][step]*bus.inputs[i][1] + bus.inputs[i][2]) for i in range(len(bus.inputs))]
-            outputs = [output_coeffs[i]*(self.__variables[bus.outputs[i][0].component_name][bus.outputs[i][0].io_name][step]*bus.outputs[i][1] + bus.outputs[i][2]) for i in range(len(bus.outputs))]
+            inputs = [input_coeffs[i]*(self.__variables[bus.inputs[i][0].component_name][bus.inputs[i][0].io_name][step]*bus.inputs[i][1] + bus.inputs[i][2]) 
+                            for i in range(len(bus.inputs))]
+            
+            outputs = [output_coeffs[i]*(self.__variables[bus.outputs[i][0].component_name][bus.outputs[i][0].io_name][step]*bus.outputs[i][1] + bus.outputs[i][2]) 
+                            for i in range(len(bus.outputs))]
 
             self.__model.add_equality(self.__model.sum_variables(inputs), self.__model.sum_variables(outputs))
 

@@ -9,7 +9,6 @@ from eesrep.eesrep_io import ComponentIO
 import pytest
 
 import eesrep
-from eesrep.components.converter import Converter
 from eesrep.components.generic_component import GenericComponent
 from eesrep.components.sink_source import FatalSink, Source
 from eesrep.eesrep_enum import SolverOption, TimeSerieType
@@ -246,7 +245,8 @@ def test_solve_greater_than():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+            future:pd.DataFrame = None):
             
             variables = {}
             variables["intensive_var"] = model_interface.get_new_continuous_variable_list(component_name+"_intensive_var_", len(time_steps), 0, 10)
@@ -290,7 +290,8 @@ def test_solve_lower_than():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+            future:pd.DataFrame = None):
             
             variables = {}
             variables["intensive_var"] = model_interface.get_new_continuous_variable_list(component_name+"_intensive_var_", len(time_steps), 0, 10)
@@ -336,7 +337,8 @@ def test_history():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+            future:pd.DataFrame = None):
 
             variables = {}
             variables["intensive_var"] = model_interface.get_new_continuous_variable_list(component_name+"_intensive_var_", len(time_steps), 0, 10000)
@@ -384,7 +386,8 @@ def test_solve_maximize():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+            future:pd.DataFrame = None):
             
             variables = {}
             variables["intensive_var"] = model_interface.get_new_continuous_variable_list(component_name+"_intensive_var_", len(time_steps), 0, 10)

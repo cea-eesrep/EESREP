@@ -58,7 +58,8 @@ class GenericComponent:
         time_steps:List[float],
         time_series:pd.DataFrame,
         history:pd.DataFrame,
-        model_interface:GenericInterface):
+        model_interface:GenericInterface,
+        future:pd.DataFrame = None):
         """Builds the model at the current horizon.
 
         Parameters
@@ -70,9 +71,11 @@ class GenericComponent:
         time_series : pd.DataFrame
             Dataframe containing the time series values at the current horizon time steps.
         history : pd.DataFrame
-            Dataframe with the variables of previous iterations if "continuity" is at true.
+            Dataframe with the history of variables of previous iterations if "continuity" is at true.
         model_interface : GenericInterface
             Solver interface used to provide the variables
+        future : pd.DataFrame
+            Dataframe with the previsions of variables of previous iterations if "continuity" is at true.
 
         Raises
         ------

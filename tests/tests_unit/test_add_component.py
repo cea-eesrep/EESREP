@@ -50,7 +50,8 @@ def test_missing_component_name():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -86,7 +87,8 @@ def test_component_name_already_exists():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -126,7 +128,8 @@ def test_wrong_time_serie_type():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -165,7 +168,8 @@ def test_wrong_time_serie_type():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -204,7 +208,8 @@ def test_wrong_time_serie_element():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -245,7 +250,8 @@ def test_wrong_time_serie_element_missing_type():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -287,7 +293,8 @@ def test_wrong_time_serie_element_wrong_type():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -329,7 +336,8 @@ def test_wrong_time_serie_element_wrong_value():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.
@@ -363,7 +371,8 @@ def test_wrong_io_type():
             time_steps:list,
             time_series:pd.DataFrame,
             history:pd.DataFrame,
-            model_interface:GenericInterface):
+            model_interface:GenericInterface,
+        future:pd.DataFrame = None):
             
             variables = {}
             objective = 0.

@@ -16,9 +16,7 @@ import pandas as pd
 
 import eesrep
 from eesrep.components.bus import GenericBus
-from eesrep.components.converter import Cluster, Converter
-from eesrep.components.sink_source import FatalSink, FatalSource, Sink, Source
-from eesrep.components.storage import GenericStorage
+from eesrep.components.sink_source import FatalSink, Source
 
 import matplotlib.pyplot as plt
 
