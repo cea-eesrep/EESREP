@@ -1,12 +1,10 @@
 """EESREP model builder and solver module"""
 
-from collections import Counter
 import inspect
 import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 
 from .components.generic_component import GenericComponent
@@ -408,12 +406,12 @@ class Eesrep:
             raise RuntimeError("Time range already defined.")
 
     #@profile
-    def set_custom_steps(self, custom_steps:list):
+    def set_custom_steps(self, custom_steps:List[float]):
         """Defines the rolling horizon time steps length.
 
         Parameters
         ----------
-        custom_steps : list
+        custom_steps : List[float]
             List of time steps length, if 1, equals the provided **time_step** value.
 
         Raises
@@ -430,12 +428,12 @@ class Eesrep:
         else:
             raise UndefinedTimeRangeException()
 
-    def __make_time_steps(self) -> list:
+    def __make_time_steps(self) -> List[float]:
         """Returns the steps times of the current solve.
 
         Returns
         -------
-        list
+        List[float]
             List of the current horizon time steps value.
 
         Raises
@@ -741,7 +739,7 @@ class Eesrep:
 
                         history[time_serie] = old_results[component.name+"_"+time_serie]
 
-                future = future_manager.get_time_serie_extract(current_solve_time_steps[:-1], component, if_continuity=True)
+                future = future_manager.get_time_serie_extract(current_solve_time_steps[:-1], component)
             else:
                 history = {}
                 future = pd.DataFrame()
@@ -881,6 +879,10 @@ class Eesrep:
 
     def set_post_processing(self, f:Callable) -> None:
         """Sets a post porcessing function to be called at the end of every rolling horizon.
+
+        The provided function must :
+        - except a pandas dataframe as unique argument,
+        - returns a pandas dataframe with the same column names and the same length.
 
         Parameters
         ----------

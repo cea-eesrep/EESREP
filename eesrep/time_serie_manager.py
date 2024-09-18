@@ -1,6 +1,8 @@
 
 from typing import Dict, List
 
+from torch import Value
+
 from eesrep.components.generic_component import GenericComponent
 
 import numpy as np
@@ -8,7 +10,30 @@ import pandas as pd
 
 class TimeSerieManager:
 
-    def __init__(self, time_serie_data:pd.DataFrame = None, intensives:Dict[str, bool] = None, is_future=False):
+    def __init__(self, 
+                    time_serie_data:pd.DataFrame = None, 
+                    intensives:Dict[str, bool] = None, 
+                    is_future=False):
+        """Init 
+
+        Parameters
+        ----------
+        time_serie_data : pd.DataFrame, optional
+            Dataframe containing the time series of the manager, by default None
+        intensives : Dict[str, bool], optional
+            Required if time_serie_data is provided, tells which column is intensive, by default None
+        is_future : bool, optional
+            This manager will be used to compute the "future" of past horizons: extrapolates with Nan, by default False
+
+        Raises
+        ------
+        ValueError
+            time_serie_data is provided but not intensives
+        ValueError
+            time column missing from time_serie_data
+        ValueError
+            column prensent in time_serie_data but not in intensives
+        """
         self.__intensives:Dict[str, bool] = {}
         self.is_future = is_future
 
@@ -19,6 +44,11 @@ class TimeSerieManager:
             
             if not "time" in time_serie_data:
                 raise ValueError("Provided time series don't have a 'time' column.")
+            
+            for column in time_serie_data:
+                if column is not "time" and (not column in intensives):
+                    raise ValueError(f"Column {column} is in time_serie_data but not in intensives.")
+                 
             self.__time_series = time_serie_data
             
             time_serie_data.reset_index(inplace=True)
@@ -35,6 +65,8 @@ class TimeSerieManager:
             Name of the time serie
         time_serie : pd.DataFrame
             Time serie dataframe
+        intensive : bool
+            If the added time serie is intensive
         """
         if len(self.__time_series.columns) == 0:
             time_serie.set_index("time", inplace=True, drop=False)
@@ -62,11 +94,13 @@ class TimeSerieManager:
             Times at which interpolate
         column_name : str
             Column to interpolate name.
+        extrapolate_with_nan : bool
+            All time above the time series max time will be interpolated as Nan.
 
         Returns
         -------
         np.ndarray
-            _description_
+            interpolated data
             
         Raises
         ------
@@ -123,17 +157,17 @@ class TimeSerieManager:
             time_serie["local_integral_"+column_name].cumsum()
 
         del time_serie["local_integral_"+column_name]
-
-        # print("\n\n", time_serie,"\n\n", )
         
         self.__time_series = pd.concat([self.__time_series, time_serie], axis=1)
 
-    def get_time_serie_extract(self, current_solve_time_steps:List[float], component:GenericComponent, if_continuity:bool = False) -> pd.DataFrame:
+    def get_time_serie_extract(self, current_solve_time_steps:List[float], component:GenericComponent) -> pd.DataFrame:
         """Gets the time series at the current solve time steps of a given component.
 
         Parameters
         ----------
-        component_name : str
+        current_solve_time_steps : List[float]
+            List of time steps at which we want the time series.
+        component : GenericComponent
             Component of which we want the time series.
 
         Returns
@@ -145,10 +179,8 @@ class TimeSerieManager:
         ------
         RuntimeError
             Can't extract time series before defining time range.
-        ComponentNameException
-            No component at the given name.
-        ValueError
-            Internal error : The definition of one of the time serie is neither extensive or intensive.
+        KeyError
+            Requested a missing column.
         """
         ts_extract = {}
 
@@ -158,6 +190,9 @@ class TimeSerieManager:
 
         for key in list_keys:
             column_name = component_name+"_"+key
+
+            if not column_name in self.__time_series:
+                raise KeyError(f"Column {column_name} is not in the time_serie dataframe.")
 
             if not "integrated_"+column_name in self.__time_series:
                 self.__make_ts_integrated_column(column_name)
