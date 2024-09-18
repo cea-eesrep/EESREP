@@ -1,8 +1,6 @@
 
 from typing import Dict, List
 
-from torch import Value
-
 from eesrep.components.generic_component import GenericComponent
 
 import numpy as np
