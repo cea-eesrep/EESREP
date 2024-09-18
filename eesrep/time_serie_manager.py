@@ -46,7 +46,7 @@ class TimeSerieManager:
                 raise ValueError("Provided time series don't have a 'time' column.")
             
             for column in time_serie_data:
-                if column is not "time" and (not column in intensives):
+                if not (column == "time" or column in intensives):
                     raise ValueError(f"Column {column} is in time_serie_data but not in intensives.")
                  
             self.__time_series = time_serie_data
