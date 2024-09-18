@@ -1,12 +1,25 @@
 """Module providing an interface between Eersep and the docplex module."""
 
-from docplex.mp.linear import Var, LinearExpr
+from docplex.mp.linear import Var, LinearExpr, ZeroExpr
 from docplex.mp.model import Model
 import pandas as pd
 
 from eesrep.solver_interface.generic_interface import GenericInterface
 from eesrep.eesrep_exceptions import SolverOptionException, UnsolvableProblemException, UnsolvedProblemException
 from eesrep.eesrep_enum import SolverOption
+
+def cast_variable(x):
+    if type(x) == Var:
+        return x.solution_value
+    elif type(x) == LinearExpr:
+        return x.solution_value
+    elif type(x) == ZeroExpr:
+        return 0.
+    elif type(x) in [float, int, bool]:
+        return x
+    else:
+        raise TypeError(f"Found {type(x)} while extracting the result.")
+    
 
 class DocplexInterface(GenericInterface):
     """Interface class between the python DOCPLEX module and Esreep."""
@@ -267,14 +280,12 @@ class DocplexInterface(GenericInterface):
             Dictionnary containing the variables whose solution is requested. 
         """
         new_df = pd.DataFrame()
-
+        
         for component in variable_dict:
             for variable in variable_dict[component]:
                 new_df.loc[:, component+"_"+variable] = variable_dict[component][variable]
 
-        for column in new_df:
-            if type(new_df[column][0]) in [Var, LinearExpr]:
-                new_df.loc[:, column] = new_df[column].apply(lambda x:x.solution_value)
+        new_df = new_df.applymap(cast_variable)
 
         return new_df
 

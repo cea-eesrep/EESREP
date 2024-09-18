@@ -6,6 +6,16 @@ import numpy as np
 
 from eesrep.eesrep_exceptions import *
 
+def cast_variable(x):
+    if type(x) == mip.entities.LinExpr:
+        return x.x
+    elif type(x) == mip.entities.Var:
+        return x.x
+    elif type(x) in [float, int, bool]:
+        return x
+    else:
+        raise TypeError(f"Found {type(x)} while extracting the result.")
+    
 class MIPInterface():
     """Interface class between the python MIP module and Esreep."""
 
@@ -236,10 +246,7 @@ class MIPInterface():
             for variable in variable_dict[component]:
                 new_df.loc[:, component+"_"+variable] = variable_dict[component][variable]
 
-        for column in new_df:
-            if isinstance(new_df[column][0], mip.entities.Var) or \
-                    isinstance(new_df[column][0], mip.entities.LinExpr):
-                new_df.loc[:, column] = new_df[column].apply(lambda y: y.x)
+        new_df = new_df.applymap(cast_variable)
 
         return new_df
         

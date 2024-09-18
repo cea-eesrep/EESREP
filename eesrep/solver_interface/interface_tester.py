@@ -99,6 +99,7 @@ class InterfaceTester:
 
         interface.solve()
 
+        print(interface.get_results_from_variables({"component":{"test":[var]}}).values)
         assert interface.get_results_from_variables({"component":{"test":[var]}}).values == [0.5], "Equality constraint not working"
 
     def test_sum(self):
